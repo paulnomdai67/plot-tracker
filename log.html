@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Activity Log — Plot Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root { --bg:#0f1117; --surface:#181c27; --surface2:#1e2333; --border:#2a3045; --text:#e8eaf0; --muted:#6b7491; --accent:#4f8ef7; --complete:#3db87a; --snagging:#e05252; }
+    *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+    header { background:var(--surface); border-bottom:1px solid var(--border); padding:0 24px; height:60px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; }
+    .logo { display:flex; align-items:center; gap:10px; font-weight:600; font-size:15px; }
+    .logo-icon { width:30px; height:30px; background:var(--accent); border-radius:7px; display:grid; place-items:center; }
+    .logo-icon svg { width:16px; height:16px; }
+    .btn-sm { padding:6px 14px; border-radius:6px; font-size:12px; font-weight:500; font-family:'DM Sans',sans-serif; cursor:pointer; transition:all .15s; background:transparent; border:1px solid var(--border); color:var(--muted); text-decoration:none; display:inline-block; }
+    .btn-sm:hover { border-color:var(--accent); color:var(--accent); }
+    main { max-width:900px; margin:0 auto; padding:32px 24px 80px; }
+    h1 { font-size:20px; font-weight:600; margin-bottom:4px; }
+    .page-sub { font-size:13px; color:var(--muted); margin-bottom:28px; }
+    .filters { display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; align-items:center; }
+    select.filter-select { background:var(--surface); border:1px solid var(--border); color:var(--text); border-radius:7px; padding:7px 12px; font-size:13px; font-family:'DM Sans',sans-serif; outline:none; min-width:160px; cursor:pointer; }
+    select.filter-select:focus { border-color:var(--accent); }
+    input.filter-input { background:var(--surface); border:1px solid var(--border); color:var(--text); border-radius:7px; padding:7px 12px; font-size:13px; font-family:'DM Sans',sans-serif; outline:none; width:200px; }
+    input.filter-input:focus { border-color:var(--accent); }
+    input.filter-input::placeholder { color:var(--muted); }
+    .filter-count { font-size:12px; color:var(--muted); margin-left:auto; }
+    .log-wrap { background:var(--surface); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+    .log-entry { display:grid; grid-template-columns:160px 1fr 160px; gap:12px; padding:13px 20px; border-bottom:1px solid var(--border); align-items:center; transition:background .1s; }
+    .log-entry:last-child { border-bottom:none; }
+    .log-entry:hover { background:var(--surface2); }
+    .log-time { font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); line-height:1.5; }
+    .log-action { font-size:13px; line-height:1.5; }
+    .log-plot { font-family:'DM Mono',monospace; font-size:12px; color:var(--accent); font-weight:500; }
+    .log-user { font-size:11px; color:var(--muted); text-align:right; font-weight:500; }
+    .log-header { display:grid; grid-template-columns:160px 1fr 160px; gap:12px; padding:10px 20px; background:var(--surface2); border-bottom:1px solid var(--border); font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.07em; }
+    .empty { text-align:center; padding:60px 20px; color:var(--muted); }
+    .empty-icon { font-size:32px; margin-bottom:12px; opacity:0.3; }
+    .loading { text-align:center; padding:40px; color:var(--muted); font-size:13px; }
+    @media (max-width:600px) { .log-entry { grid-template-columns:1fr; gap:4px; } .log-header { display:none; } .log-user { text-align:left; } }
+  </style>
+</head>
+<body>
+<header>
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="1.6">
+        <rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.2"/>
+        <rect x="9" y="1.5" width="5.5" height="5.5" rx="1.2"/>
+        <rect x="1.5" y="9" width="5.5" height="5.5" rx="1.2"/>
+        <rect x="9" y="9" width="5.5" height="5.5" rx="1.2"/>
+      </svg>
+    </div>
+    Plot Tracker
+  </div>
+  <a href="index.html" class="btn-sm">← Back to Plots</a>
+</header>
+
+<main>
+  <h1>Activity Log</h1>
+  <p class="page-sub">A full audit trail of every change made across all sites.</p>
+  <div class="filters">
+    <select class="filter-select" id="filter-site" onchange="loadLog()"><option value="">All Sites</option></select>
+    <select class="filter-select" id="filter-user" onchange="renderLog()"><option value="">All Users</option></select>
+    <input class="filter-input" id="filter-search" type="text" placeholder="Search actions…" oninput="renderLog()"/>
+    <span class="filter-count" id="filter-count"></span>
+  </div>
+  <div class="log-wrap">
+    <div class="log-header"><span>Time</span><span>Action</span><span style="text-align:right">User</span></div>
+    <div id="log-body"></div>
+    <div id="loading" class="loading">Loading activity…</div>
+    <div id="empty" class="empty" style="display:none"><div class="empty-icon">📄</div><p>No activity found.</p></div>
+  </div>
+</main>
+
+<script>
+  const SUPABASE_URL = 'https://fddnkveadygyfjlkuhyl.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZkZG5rdmVhZHlneWZqbGt1aHlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNDUwNzIsImV4cCI6MjA5MDcyMTA3Mn0.23x_7Pl_XvhG4dwiwYVFVmFSaQEuxZZcK1gLC58Q3dM';
+
+  const { createClient } = supabase;
+  const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+  let allEntries=[], sites=[];
+
+  async function init() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { window.location.href='login.html'; return; }
+    await loadSites(); await loadLog();
+  }
+
+  async function loadSites() {
+    const { data } = await sb.from('sites').select('id,name,developers(name)').order('name');
+    sites=data||[];
+    const sel=document.getElementById('filter-site');
+    sel.innerHTML='<option value="">All Sites</option>'+sites.map(s=>`<option value="${s.id}">${s.developers?.name?s.developers.name+' — ':''}${s.name}</option>`).join('');
+  }
+
+  async function loadLog() {
+    document.getElementById('loading').style.display='block';
+    document.getElementById('log-body').innerHTML='';
+    document.getElementById('empty').style.display='none';
+    const siteId=document.getElementById('filter-site').value;
+    let query=sb.from('audit_log').select('*,plots(number)').order('created_at',{ascending:false}).limit(500);
+    if (siteId) query=query.eq('site_id',siteId);
+    const { data,error } = await query;
+    document.getElementById('loading').style.display='none';
+    if (error) { document.getElementById('log-body').innerHTML='<div class="empty"><p>Error loading log.</p></div>'; return; }
+    allEntries=data||[];
+    const users=[...new Set(allEntries.map(e=>e.user_email))].sort();
+    const userSel=document.getElementById('filter-user'); const curUser=userSel.value;
+    userSel.innerHTML='<option value="">All Users</option>'+users.map(u=>`<option value="${u}" ${u===curUser?'selected':''}>${u}</option>`).join('');
+    renderLog();
+  }
+
+  function renderLog() {
+    const userFilter=document.getElementById('filter-user').value;
+    const q=document.getElementById('filter-search').value.trim().toLowerCase();
+    const filtered=allEntries.filter(e=>!userFilter||e.user_email===userFilter).filter(e=>!q||e.action.toLowerCase().includes(q)||(e.plots?.number||'').toLowerCase().includes(q));
+    document.getElementById('filter-count').textContent=filtered.length+' entr'+(filtered.length===1?'y':'ies');
+    const body=document.getElementById('log-body'); const empty=document.getElementById('empty');
+    if (filtered.length===0) { body.innerHTML=''; empty.style.display='block'; return; }
+    empty.style.display='none';
+    body.innerHTML=filtered.map(e=>{
+      const dt=new Date(e.created_at);
+      const date=dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+      const time=dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+      return `<div class="log-entry">
+        <div class="log-time">${date}<br>${time}</div>
+        <div class="log-action">${e.plots?.number?`<span class="log-plot">Plot ${esc(e.plots.number)}</span> — `:''}${esc(e.action)}</div>
+        <div class="log-user">${esc(e.user_email)}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  init();
+</script>
+</body>
+</html>
