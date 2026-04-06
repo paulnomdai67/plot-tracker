@@ -15,9 +15,10 @@
     .logo { display:flex; align-items:center; gap:10px; font-weight:600; font-size:15px; }
     .logo-icon { width:30px; height:30px; background:var(--accent); border-radius:7px; display:grid; place-items:center; }
     .logo-icon svg { width:16px; height:16px; }
+    .header-right { display:flex; align-items:center; gap:10px; }
     .btn-sm { padding:6px 14px; border-radius:6px; font-size:12px; font-weight:500; font-family:'DM Sans',sans-serif; cursor:pointer; transition:all .15s; background:transparent; border:1px solid var(--border); color:var(--muted); text-decoration:none; display:inline-block; }
     .btn-sm:hover { border-color:var(--accent); color:var(--accent); }
-    main { max-width:900px; margin:0 auto; padding:32px 24px 80px; }
+    main { max-width:960px; margin:0 auto; padding:32px 24px 80px; }
     h1 { font-size:20px; font-weight:600; margin-bottom:4px; }
     .page-sub { font-size:13px; color:var(--muted); margin-bottom:28px; }
     .filters { display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; align-items:center; }
@@ -27,19 +28,31 @@
     input.filter-input:focus { border-color:var(--accent); }
     input.filter-input::placeholder { color:var(--muted); }
     .filter-count { font-size:12px; color:var(--muted); margin-left:auto; }
+
     .log-wrap { background:var(--surface); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
-    .log-entry { display:grid; grid-template-columns:160px 1fr 160px; gap:12px; padding:13px 20px; border-bottom:1px solid var(--border); align-items:center; transition:background .1s; }
+    .log-header { display:grid; grid-template-columns:150px 80px 1fr 160px; gap:12px; padding:10px 20px; background:var(--surface2); border-bottom:1px solid var(--border); font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.07em; }
+    .log-entry { display:grid; grid-template-columns:150px 80px 1fr 160px; gap:12px; padding:12px 20px; border-bottom:1px solid var(--border); align-items:center; transition:background .1s; }
     .log-entry:last-child { border-bottom:none; }
     .log-entry:hover { background:var(--surface2); }
     .log-time { font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); line-height:1.5; }
+    .log-type { font-size:11px; font-weight:600; }
+    .log-type.type-login { color:var(--accent); }
+    .log-type.type-plot { color:var(--complete); }
+    .log-type.type-photo { color:#c48a2f; }
+    .log-type.type-import { color:#9b7fe8; }
+    .log-type.type-other { color:var(--muted); }
     .log-action { font-size:13px; line-height:1.5; }
     .log-plot { font-family:'DM Mono',monospace; font-size:12px; color:var(--accent); font-weight:500; }
-    .log-user { font-size:11px; color:var(--muted); text-align:right; font-weight:500; }
-    .log-header { display:grid; grid-template-columns:160px 1fr 160px; gap:12px; padding:10px 20px; background:var(--surface2); border-bottom:1px solid var(--border); font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.07em; }
+    .log-user { font-size:11px; color:var(--muted); font-weight:500; text-align:right; }
     .empty { text-align:center; padding:60px 20px; color:var(--muted); }
     .empty-icon { font-size:32px; margin-bottom:12px; opacity:0.3; }
     .loading { text-align:center; padding:40px; color:var(--muted); font-size:13px; }
-    @media (max-width:600px) { .log-entry { grid-template-columns:1fr; gap:4px; } .log-header { display:none; } .log-user { text-align:left; } }
+
+    @media (max-width:700px) {
+      .log-entry,.log-header { grid-template-columns:1fr; gap:4px; }
+      .log-header { display:none; }
+      .log-user { text-align:left; }
+    }
   </style>
 </head>
 <body>
@@ -55,20 +68,33 @@
     </div>
     Plot Tracker
   </div>
-  <a href="index.html" class="btn-sm">← Back to Plots</a>
+  <div class="header-right">
+    <a href="index.html" class="btn-sm">← Back to Plots</a>
+  </div>
 </header>
 
 <main>
   <h1>Activity Log</h1>
-  <p class="page-sub">A full audit trail of every change made across all sites.</p>
+  <p class="page-sub">Full audit trail — plot changes, photo uploads, logins and sign-outs.</p>
+
   <div class="filters">
     <select class="filter-select" id="filter-site" onchange="loadLog()"><option value="">All Sites</option></select>
+    <select class="filter-select" id="filter-type" onchange="renderLog()">
+      <option value="">All Activity</option>
+      <option value="login">Logins</option>
+      <option value="plot">Plot Changes</option>
+      <option value="photo">Photos</option>
+      <option value="import">CSV Imports</option>
+    </select>
     <select class="filter-select" id="filter-user" onchange="renderLog()"><option value="">All Users</option></select>
     <input class="filter-input" id="filter-search" type="text" placeholder="Search actions…" oninput="renderLog()"/>
     <span class="filter-count" id="filter-count"></span>
   </div>
+
   <div class="log-wrap">
-    <div class="log-header"><span>Time</span><span>Action</span><span style="text-align:right">User</span></div>
+    <div class="log-header">
+      <span>Time</span><span>Type</span><span>Action</span><span style="text-align:right">User</span>
+    </div>
     <div id="log-body"></div>
     <div id="loading" class="loading">Loading activity…</div>
     <div id="empty" class="empty" style="display:none"><div class="empty-icon">📄</div><p>No activity found.</p></div>
@@ -113,20 +139,42 @@
     renderLog();
   }
 
+  function getType(action) {
+    const a = action.toLowerCase();
+    if (a.includes('signed in')||a.includes('signed out')||a.includes('account created')) return 'login';
+    if (a.includes('photo')) return 'photo';
+    if (a.includes('csv')||a.includes('bulk import')) return 'import';
+    if (a.includes('plot')||a.includes('status')||a.includes('notes')||a.includes('created')||a.includes('removed')) return 'plot';
+    return 'other';
+  }
+
+  function typeLabel(type) {
+    return { login:'Login', photo:'Photo', import:'Import', plot:'Plot', other:'Other' }[type]||'Other';
+  }
+
   function renderLog() {
     const userFilter=document.getElementById('filter-user').value;
+    const typeFilter=document.getElementById('filter-type').value;
     const q=document.getElementById('filter-search').value.trim().toLowerCase();
-    const filtered=allEntries.filter(e=>!userFilter||e.user_email===userFilter).filter(e=>!q||e.action.toLowerCase().includes(q)||(e.plots?.number||'').toLowerCase().includes(q));
+    const filtered=allEntries
+      .filter(e=>!userFilter||e.user_email===userFilter)
+      .filter(e=>!typeFilter||getType(e.action)===typeFilter)
+      .filter(e=>!q||e.action.toLowerCase().includes(q)||(e.plots?.number||'').toLowerCase().includes(q)||e.user_email.toLowerCase().includes(q));
+
     document.getElementById('filter-count').textContent=filtered.length+' entr'+(filtered.length===1?'y':'ies');
-    const body=document.getElementById('log-body'); const empty=document.getElementById('empty');
+    const body=document.getElementById('log-body');
+    const empty=document.getElementById('empty');
     if (filtered.length===0) { body.innerHTML=''; empty.style.display='block'; return; }
     empty.style.display='none';
-    body.innerHTML=filtered.map(e=>{
+
+    body.innerHTML=filtered.map(e => {
       const dt=new Date(e.created_at);
       const date=dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
       const time=dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+      const type=getType(e.action);
       return `<div class="log-entry">
         <div class="log-time">${date}<br>${time}</div>
+        <div class="log-type type-${type}">${typeLabel(type)}</div>
         <div class="log-action">${e.plots?.number?`<span class="log-plot">Plot ${esc(e.plots.number)}</span> — `:''}${esc(e.action)}</div>
         <div class="log-user">${esc(e.user_email)}</div>
       </div>`;

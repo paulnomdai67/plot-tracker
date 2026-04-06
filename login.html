@@ -8,69 +8,32 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    :root {
-      --bg: #0f1117; --surface: #181c27; --border: #2a3045;
-      --text: #e8eaf0; --muted: #6b7491; --accent: #4f8ef7;
-      --error: #e05252;
-    }
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'DM Sans', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 40px;
-      width: 100%;
-      max-width: 400px;
-    }
-    .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 32px; }
-    .logo-icon { width: 34px; height: 34px; background: var(--accent); border-radius: 8px; display: grid; place-items: center; }
-    .logo-icon svg { width: 18px; height: 18px; }
-    .logo-text { font-size: 17px; font-weight: 600; }
-    .logo-sub { font-size: 12px; color: var(--muted); margin-top: 1px; }
-    h1 { font-size: 20px; font-weight: 600; margin-bottom: 6px; }
-    .subtitle { font-size: 13px; color: var(--muted); margin-bottom: 28px; }
-    label { display: block; font-size: 12px; font-weight: 500; color: var(--muted); margin-bottom: 6px; }
-    input[type="email"], input[type="password"], input[type="text"] {
-      width: 100%; background: var(--bg); border: 1px solid var(--border);
-      color: var(--text); border-radius: 8px; padding: 10px 14px;
-      font-size: 14px; font-family: 'DM Sans', sans-serif;
-      outline: none; margin-bottom: 16px; transition: border .15s;
-    }
-    input:focus { border-color: var(--accent); }
-    input::placeholder { color: var(--muted); }
-    .btn {
-      width: 100%; padding: 11px; border-radius: 8px; font-size: 14px;
-      font-weight: 600; font-family: 'DM Sans', sans-serif;
-      cursor: pointer; border: none; transition: opacity .15s; margin-bottom: 10px;
-    }
-    .btn-primary { background: var(--accent); color: #fff; }
-    .btn-primary:hover { opacity: 0.85; }
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-    .toggle { text-align: center; font-size: 13px; color: var(--muted); margin-top: 8px; }
-    .toggle a { color: var(--accent); cursor: pointer; text-decoration: none; }
-    .toggle a:hover { text-decoration: underline; }
-    .error-msg {
-      background: rgba(224,82,82,0.1); border: 1px solid var(--error);
-      color: var(--error); border-radius: 7px; padding: 10px 14px;
-      font-size: 13px; margin-bottom: 16px; display: none;
-    }
-    .error-msg.show { display: block; }
-    .success-msg {
-      background: rgba(61,184,122,0.1); border: 1px solid #3db87a;
-      color: #3db87a; border-radius: 7px; padding: 10px 14px;
-      font-size: 13px; margin-bottom: 16px; display: none;
-    }
-    .success-msg.show { display: block; }
+    :root { --bg:#0f1117; --surface:#181c27; --border:#2a3045; --text:#e8eaf0; --muted:#6b7491; --accent:#4f8ef7; --error:#e05252; }
+    *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+    .card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:40px; width:100%; max-width:400px; }
+    .logo { display:flex; align-items:center; gap:10px; margin-bottom:32px; }
+    .logo-icon { width:34px; height:34px; background:var(--accent); border-radius:8px; display:grid; place-items:center; }
+    .logo-icon svg { width:18px; height:18px; }
+    .logo-text { font-size:17px; font-weight:600; }
+    .logo-sub { font-size:12px; color:var(--muted); margin-top:1px; }
+    h1 { font-size:20px; font-weight:600; margin-bottom:6px; }
+    .subtitle { font-size:13px; color:var(--muted); margin-bottom:28px; }
+    label { display:block; font-size:12px; font-weight:500; color:var(--muted); margin-bottom:6px; }
+    input[type="email"],input[type="password"],input[type="text"] { width:100%; background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:8px; padding:10px 14px; font-size:14px; font-family:'DM Sans',sans-serif; outline:none; margin-bottom:16px; transition:border .15s; }
+    input:focus { border-color:var(--accent); }
+    input::placeholder { color:var(--muted); }
+    .btn { width:100%; padding:11px; border-radius:8px; font-size:14px; font-weight:600; font-family:'DM Sans',sans-serif; cursor:pointer; border:none; transition:opacity .15s; margin-bottom:10px; }
+    .btn-primary { background:var(--accent); color:#fff; }
+    .btn-primary:hover { opacity:0.85; }
+    .btn-primary:disabled { opacity:0.5; cursor:not-allowed; }
+    .toggle { text-align:center; font-size:13px; color:var(--muted); margin-top:8px; }
+    .toggle a { color:var(--accent); cursor:pointer; text-decoration:none; }
+    .toggle a:hover { text-decoration:underline; }
+    .error-msg { background:rgba(224,82,82,0.1); border:1px solid var(--error); color:var(--error); border-radius:7px; padding:10px 14px; font-size:13px; margin-bottom:16px; display:none; }
+    .error-msg.show { display:block; }
+    .success-msg { background:rgba(61,184,122,0.1); border:1px solid #3db87a; color:#3db87a; border-radius:7px; padding:10px 14px; font-size:13px; margin-bottom:16px; display:none; }
+    .success-msg.show { display:block; }
   </style>
 </head>
 <body>
@@ -143,15 +106,17 @@
     document.getElementById('error-msg').classList.remove('show');
     document.getElementById('success-msg').classList.remove('show');
   }
-  function showRegister() {
-    clearMsgs();
-    document.getElementById('login-form').style.display = 'none';
-    document.getElementById('register-form').style.display = 'block';
-  }
-  function showLogin() {
-    clearMsgs();
-    document.getElementById('register-form').style.display = 'none';
-    document.getElementById('login-form').style.display = 'block';
+  function showRegister() { clearMsgs(); document.getElementById('login-form').style.display='none'; document.getElementById('register-form').style.display='block'; }
+  function showLogin() { clearMsgs(); document.getElementById('register-form').style.display='none'; document.getElementById('login-form').style.display='block'; }
+
+  async function logLogin(user, action) {
+    const name = user.user_metadata?.full_name || user.email;
+    await sb.from('audit_log').insert({
+      plot_id: null,
+      site_id: null,
+      user_email: name,
+      action
+    }).catch(() => {});
   }
 
   async function signIn() {
@@ -160,11 +125,12 @@
     if (!email || !password) { showError('Please enter your email and password.'); return; }
     const btn = document.getElementById('login-btn');
     btn.disabled = true; btn.textContent = 'Signing in…';
-    const { error } = await sb.auth.signInWithPassword({ email, password });
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
     if (error) {
       showError(error.message);
       btn.disabled = false; btn.textContent = 'Sign In';
     } else {
+      await logLogin(data.user, 'Signed in');
       window.location.href = 'index.html';
     }
   }
@@ -177,19 +143,20 @@
     if (password.length < 6) { showError('Password must be at least 6 characters.'); return; }
     const btn = document.getElementById('reg-btn');
     btn.disabled = true; btn.textContent = 'Creating account…';
-    const { error } = await sb.auth.signUp({
-      email, password,
-      options: { data: { full_name: name } }
-    });
+    const { error } = await sb.auth.signUp({ email, password, options: { data: { full_name: name } } });
     if (error) {
       showError(error.message);
       btn.disabled = false; btn.textContent = 'Create Account';
     } else {
       showSuccess('Account created! Signing you in…');
       setTimeout(async () => {
-        const { error: signInError } = await sb.auth.signInWithPassword({ email, password });
-        if (!signInError) window.location.href = 'index.html';
-        else { btn.disabled = false; btn.textContent = 'Create Account'; showLogin(); }
+        const { data: signInData, error: signInError } = await sb.auth.signInWithPassword({ email, password });
+        if (!signInError) {
+          await logLogin(signInData.user, 'Account created and signed in');
+          window.location.href = 'index.html';
+        } else {
+          btn.disabled = false; btn.textContent = 'Create Account'; showLogin();
+        }
       }, 1000);
     }
   }
