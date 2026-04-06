@@ -20,7 +20,7 @@
     h1 { font-size:20px; font-weight:600; margin-bottom:6px; }
     .subtitle { font-size:13px; color:var(--muted); margin-bottom:28px; }
     label { display:block; font-size:12px; font-weight:500; color:var(--muted); margin-bottom:6px; }
-    input[type="email"],input[type="password"],input[type="text"] { width:100%; background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:8px; padding:10px 14px; font-size:14px; font-family:'DM Sans',sans-serif; outline:none; margin-bottom:16px; transition:border .15s; }
+    input { width:100%; background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:8px; padding:10px 14px; font-size:14px; font-family:'DM Sans',sans-serif; outline:none; margin-bottom:16px; transition:border .15s; }
     input:focus { border-color:var(--accent); }
     input::placeholder { color:var(--muted); }
     .btn { width:100%; padding:11px; border-radius:8px; font-size:14px; font-weight:600; font-family:'DM Sans',sans-serif; cursor:pointer; border:none; transition:opacity .15s; margin-bottom:10px; }
@@ -29,7 +29,6 @@
     .btn-primary:disabled { opacity:0.5; cursor:not-allowed; }
     .toggle { text-align:center; font-size:13px; color:var(--muted); margin-top:8px; }
     .toggle a { color:var(--accent); cursor:pointer; text-decoration:none; }
-    .toggle a:hover { text-decoration:underline; }
     .error-msg { background:rgba(224,82,82,0.1); border:1px solid var(--error); color:var(--error); border-radius:7px; padding:10px 14px; font-size:13px; margin-bottom:16px; display:none; }
     .error-msg.show { display:block; }
     .success-msg { background:rgba(61,184,122,0.1); border:1px solid #3db87a; color:#3db87a; border-radius:7px; padding:10px 14px; font-size:13px; margin-bottom:16px; display:none; }
@@ -49,13 +48,11 @@
     </div>
     <div>
       <div class="logo-text">Plot Tracker</div>
-      <div class="logo-sub">Windows &amp; Doors</div>
+      <div class="logo-sub">Scotia Windows &amp; Doors</div>
     </div>
   </div>
-
   <div id="error-msg" class="error-msg"></div>
   <div id="success-msg" class="success-msg"></div>
-
   <div id="login-form">
     <h1>Sign in</h1>
     <p class="subtitle">Enter your credentials to access your sites</p>
@@ -66,7 +63,6 @@
     <button class="btn btn-primary" id="login-btn" onclick="signIn()">Sign In</button>
     <div class="toggle">Don't have an account? <a onclick="showRegister()">Register</a></div>
   </div>
-
   <div id="register-form" style="display:none">
     <h1>Create account</h1>
     <p class="subtitle">Register to start tracking your plots</p>
@@ -80,91 +76,66 @@
     <div class="toggle">Already have an account? <a onclick="showLogin()">Sign in</a></div>
   </div>
 </div>
-
 <script>
   const SUPABASE_URL = 'https://fddnkveadygyfjlkuhyl.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZkZG5rdmVhZHlneWZqbGt1aHlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNDUwNzIsImV4cCI6MjA5MDcyMTA3Mn0.23x_7Pl_XvhG4dwiwYVFVmFSaQEuxZZcK1gLC58Q3dM';
-
   const { createClient } = supabase;
   const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  sb.auth.getSession().then(({ data }) => {
-    if (data.session) window.location.href = 'index.html';
-  });
+  sb.auth.getSession().then(({ data }) => { if (data.session) window.location.href='index.html'; });
 
-  function showError(msg) {
-    const el = document.getElementById('error-msg');
-    el.textContent = msg; el.classList.add('show');
-    document.getElementById('success-msg').classList.remove('show');
-  }
-  function showSuccess(msg) {
-    const el = document.getElementById('success-msg');
-    el.textContent = msg; el.classList.add('show');
-    document.getElementById('error-msg').classList.remove('show');
-  }
-  function clearMsgs() {
-    document.getElementById('error-msg').classList.remove('show');
-    document.getElementById('success-msg').classList.remove('show');
-  }
+  function showError(msg) { const el=document.getElementById('error-msg'); el.textContent=msg; el.classList.add('show'); document.getElementById('success-msg').classList.remove('show'); }
+  function showSuccess(msg) { const el=document.getElementById('success-msg'); el.textContent=msg; el.classList.add('show'); document.getElementById('error-msg').classList.remove('show'); }
+  function clearMsgs() { document.getElementById('error-msg').classList.remove('show'); document.getElementById('success-msg').classList.remove('show'); }
   function showRegister() { clearMsgs(); document.getElementById('login-form').style.display='none'; document.getElementById('register-form').style.display='block'; }
   function showLogin() { clearMsgs(); document.getElementById('register-form').style.display='none'; document.getElementById('login-form').style.display='block'; }
 
-  async function logLogin(user, action) {
+  async function logEvent(user, action) {
     const name = user.user_metadata?.full_name || user.email;
-    await sb.from('audit_log').insert({
-      plot_id: null,
-      site_id: null,
-      user_email: name,
-      action
-    }).catch(() => {});
+    await sb.from('audit_log').insert({ plot_id:null, site_id:null, user_email:name, action }).catch(()=>{});
   }
 
-  async function signIn() {
-    const email = document.getElementById('login-email').value.trim();
-    const password = document.getElementById('login-password').value;
-    if (!email || !password) { showError('Please enter your email and password.'); return; }
-    const btn = document.getElementById('login-btn');
-    btn.disabled = true; btn.textContent = 'Signing in…';
-    const { data, error } = await sb.auth.signInWithPassword({ email, password });
-    if (error) {
-      showError(error.message);
-      btn.disabled = false; btn.textContent = 'Sign In';
-    } else {
-      await logLogin(data.user, 'Signed in');
-      window.location.href = 'index.html';
+  async function ensureRole(user) {
+    const { data } = await sb.from('user_roles').select('role').eq('user_id', user.id).single();
+    if (!data) {
+      await sb.from('user_roles').insert({ user_id:user.id, role:'standard' }).catch(()=>{});
     }
   }
 
+  async function signIn() {
+    const email=document.getElementById('login-email').value.trim();
+    const password=document.getElementById('login-password').value;
+    if (!email||!password) { showError('Please enter your email and password.'); return; }
+    const btn=document.getElementById('login-btn');
+    btn.disabled=true; btn.textContent='Signing in…';
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) { showError(error.message); btn.disabled=false; btn.textContent='Sign In'; }
+    else { await ensureRole(data.user); await logEvent(data.user,'Signed in'); window.location.href='index.html'; }
+  }
+
   async function register() {
-    const name = document.getElementById('reg-name').value.trim();
-    const email = document.getElementById('reg-email').value.trim();
-    const password = document.getElementById('reg-password').value;
-    if (!name || !email || !password) { showError('Please fill in all fields.'); return; }
-    if (password.length < 6) { showError('Password must be at least 6 characters.'); return; }
-    const btn = document.getElementById('reg-btn');
-    btn.disabled = true; btn.textContent = 'Creating account…';
-    const { error } = await sb.auth.signUp({ email, password, options: { data: { full_name: name } } });
-    if (error) {
-      showError(error.message);
-      btn.disabled = false; btn.textContent = 'Create Account';
-    } else {
+    const name=document.getElementById('reg-name').value.trim();
+    const email=document.getElementById('reg-email').value.trim();
+    const password=document.getElementById('reg-password').value;
+    if (!name||!email||!password) { showError('Please fill in all fields.'); return; }
+    if (password.length<6) { showError('Password must be at least 6 characters.'); return; }
+    const btn=document.getElementById('reg-btn');
+    btn.disabled=true; btn.textContent='Creating account…';
+    const { error } = await sb.auth.signUp({ email, password, options:{ data:{ full_name:name } } });
+    if (error) { showError(error.message); btn.disabled=false; btn.textContent='Create Account'; }
+    else {
       showSuccess('Account created! Signing you in…');
       setTimeout(async () => {
-        const { data: signInData, error: signInError } = await sb.auth.signInWithPassword({ email, password });
-        if (!signInError) {
-          await logLogin(signInData.user, 'Account created and signed in');
-          window.location.href = 'index.html';
-        } else {
-          btn.disabled = false; btn.textContent = 'Create Account'; showLogin();
-        }
+        const { data:d, error:e } = await sb.auth.signInWithPassword({ email, password });
+        if (!e) { await ensureRole(d.user); await logEvent(d.user,'Account created and signed in'); window.location.href='index.html'; }
+        else { btn.disabled=false; btn.textContent='Create Account'; showLogin(); }
       }, 1000);
     }
   }
 
   document.addEventListener('keydown', e => {
-    if (e.key !== 'Enter') return;
-    if (document.getElementById('register-form').style.display !== 'none') register();
-    else signIn();
+    if (e.key!=='Enter') return;
+    if (document.getElementById('register-form').style.display!=='none') register(); else signIn();
   });
 </script>
 </body>

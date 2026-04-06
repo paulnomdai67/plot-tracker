@@ -15,44 +15,39 @@
     .logo { display:flex; align-items:center; gap:10px; font-weight:600; font-size:15px; }
     .logo-icon { width:30px; height:30px; background:var(--accent); border-radius:7px; display:grid; place-items:center; }
     .logo-icon svg { width:16px; height:16px; }
-    .header-right { display:flex; align-items:center; gap:10px; }
+    .header-right { display:flex; gap:10px; }
     .btn-sm { padding:6px 14px; border-radius:6px; font-size:12px; font-weight:500; font-family:'DM Sans',sans-serif; cursor:pointer; transition:all .15s; background:transparent; border:1px solid var(--border); color:var(--muted); text-decoration:none; display:inline-block; }
     .btn-sm:hover { border-color:var(--accent); color:var(--accent); }
     main { max-width:960px; margin:0 auto; padding:32px 24px 80px; }
     h1 { font-size:20px; font-weight:600; margin-bottom:4px; }
     .page-sub { font-size:13px; color:var(--muted); margin-bottom:28px; }
     .filters { display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; align-items:center; }
-    select.filter-select { background:var(--surface); border:1px solid var(--border); color:var(--text); border-radius:7px; padding:7px 12px; font-size:13px; font-family:'DM Sans',sans-serif; outline:none; min-width:160px; cursor:pointer; }
+    select.filter-select { background:var(--surface); border:1px solid var(--border); color:var(--text); border-radius:7px; padding:7px 12px; font-size:13px; font-family:'DM Sans',sans-serif; outline:none; min-width:150px; cursor:pointer; }
     select.filter-select:focus { border-color:var(--accent); }
     input.filter-input { background:var(--surface); border:1px solid var(--border); color:var(--text); border-radius:7px; padding:7px 12px; font-size:13px; font-family:'DM Sans',sans-serif; outline:none; width:200px; }
     input.filter-input:focus { border-color:var(--accent); }
     input.filter-input::placeholder { color:var(--muted); }
     .filter-count { font-size:12px; color:var(--muted); margin-left:auto; }
-
     .log-wrap { background:var(--surface); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
-    .log-header { display:grid; grid-template-columns:150px 80px 1fr 160px; gap:12px; padding:10px 20px; background:var(--surface2); border-bottom:1px solid var(--border); font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.07em; }
-    .log-entry { display:grid; grid-template-columns:150px 80px 1fr 160px; gap:12px; padding:12px 20px; border-bottom:1px solid var(--border); align-items:center; transition:background .1s; }
+    .log-header { display:grid; grid-template-columns:150px 90px 1fr 160px; gap:12px; padding:10px 20px; background:var(--surface2); border-bottom:1px solid var(--border); font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.07em; }
+    .log-entry { display:grid; grid-template-columns:150px 90px 1fr 160px; gap:12px; padding:12px 20px; border-bottom:1px solid var(--border); align-items:center; transition:background .1s; }
     .log-entry:last-child { border-bottom:none; }
     .log-entry:hover { background:var(--surface2); }
     .log-time { font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); line-height:1.5; }
     .log-type { font-size:11px; font-weight:600; }
-    .log-type.type-login { color:var(--accent); }
-    .log-type.type-plot { color:var(--complete); }
-    .log-type.type-photo { color:#c48a2f; }
-    .log-type.type-import { color:#9b7fe8; }
-    .log-type.type-other { color:var(--muted); }
+    .type-login    { color:var(--accent); }
+    .type-plot     { color:var(--complete); }
+    .type-photo    { color:#c48a2f; }
+    .type-import   { color:#9b7fe8; }
+    .type-delivery { color:#3b9ede; }
+    .type-snag     { color:var(--snagging); }
+    .type-other    { color:var(--muted); }
     .log-action { font-size:13px; line-height:1.5; }
     .log-plot { font-family:'DM Mono',monospace; font-size:12px; color:var(--accent); font-weight:500; }
     .log-user { font-size:11px; color:var(--muted); font-weight:500; text-align:right; }
     .empty { text-align:center; padding:60px 20px; color:var(--muted); }
-    .empty-icon { font-size:32px; margin-bottom:12px; opacity:0.3; }
     .loading { text-align:center; padding:40px; color:var(--muted); font-size:13px; }
-
-    @media (max-width:700px) {
-      .log-entry,.log-header { grid-template-columns:1fr; gap:4px; }
-      .log-header { display:none; }
-      .log-user { text-align:left; }
-    }
+    @media (max-width:700px) { .log-entry,.log-header { grid-template-columns:1fr; gap:4px; } .log-header { display:none; } .log-user { text-align:left; } }
   </style>
 </head>
 <body>
@@ -72,11 +67,9 @@
     <a href="index.html" class="btn-sm">← Back to Plots</a>
   </div>
 </header>
-
 <main>
   <h1>Activity Log</h1>
-  <p class="page-sub">Full audit trail — plot changes, photo uploads, logins and sign-outs.</p>
-
+  <p class="page-sub">Full audit trail — all changes, logins, deliveries and snagging sign-offs.</p>
   <div class="filters">
     <select class="filter-select" id="filter-site" onchange="loadLog()"><option value="">All Sites</option></select>
     <select class="filter-select" id="filter-type" onchange="renderLog()">
@@ -85,41 +78,34 @@
       <option value="plot">Plot Changes</option>
       <option value="photo">Photos</option>
       <option value="import">CSV Imports</option>
+      <option value="delivery">Deliveries</option>
+      <option value="snag">Snagging</option>
     </select>
     <select class="filter-select" id="filter-user" onchange="renderLog()"><option value="">All Users</option></select>
     <input class="filter-input" id="filter-search" type="text" placeholder="Search actions…" oninput="renderLog()"/>
     <span class="filter-count" id="filter-count"></span>
   </div>
-
   <div class="log-wrap">
-    <div class="log-header">
-      <span>Time</span><span>Type</span><span>Action</span><span style="text-align:right">User</span>
-    </div>
+    <div class="log-header"><span>Time</span><span>Type</span><span>Action</span><span style="text-align:right">User</span></div>
     <div id="log-body"></div>
     <div id="loading" class="loading">Loading activity…</div>
-    <div id="empty" class="empty" style="display:none"><div class="empty-icon">📄</div><p>No activity found.</p></div>
+    <div id="empty" class="empty" style="display:none"><p>No activity found.</p></div>
   </div>
 </main>
-
 <script>
   const SUPABASE_URL = 'https://fddnkveadygyfjlkuhyl.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZkZG5rdmVhZHlneWZqbGt1aHlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNDUwNzIsImV4cCI6MjA5MDcyMTA3Mn0.23x_7Pl_XvhG4dwiwYVFVmFSaQEuxZZcK1gLC58Q3dM';
-
   const { createClient } = supabase;
   const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
-  let allEntries=[], sites=[];
+  let allEntries=[];
 
   async function init() {
-    const { data: { session } } = await sb.auth.getSession();
+    const { data:{ session } } = await sb.auth.getSession();
     if (!session) { window.location.href='login.html'; return; }
-    await loadSites(); await loadLog();
-  }
-
-  async function loadSites() {
     const { data } = await sb.from('sites').select('id,name,developers(name)').order('name');
-    sites=data||[];
     const sel=document.getElementById('filter-site');
-    sel.innerHTML='<option value="">All Sites</option>'+sites.map(s=>`<option value="${s.id}">${s.developers?.name?s.developers.name+' — ':''}${s.name}</option>`).join('');
+    sel.innerHTML='<option value="">All Sites</option>'+(data||[]).map(s=>`<option value="${s.id}">${s.developers?.name?s.developers.name+' — ':''}${s.name}</option>`).join('');
+    await loadLog();
   }
 
   async function loadLog() {
@@ -129,52 +115,49 @@
     const siteId=document.getElementById('filter-site').value;
     let query=sb.from('audit_log').select('*,plots(number)').order('created_at',{ascending:false}).limit(500);
     if (siteId) query=query.eq('site_id',siteId);
-    const { data,error } = await query;
+    const { data } = await query;
     document.getElementById('loading').style.display='none';
-    if (error) { document.getElementById('log-body').innerHTML='<div class="empty"><p>Error loading log.</p></div>'; return; }
     allEntries=data||[];
     const users=[...new Set(allEntries.map(e=>e.user_email))].sort();
-    const userSel=document.getElementById('filter-user'); const curUser=userSel.value;
-    userSel.innerHTML='<option value="">All Users</option>'+users.map(u=>`<option value="${u}" ${u===curUser?'selected':''}>${u}</option>`).join('');
+    const userSel=document.getElementById('filter-user'); const cur=userSel.value;
+    userSel.innerHTML='<option value="">All Users</option>'+users.map(u=>`<option value="${u}" ${u===cur?'selected':''}>${u}</option>`).join('');
     renderLog();
   }
 
   function getType(action) {
-    const a = action.toLowerCase();
+    const a=action.toLowerCase();
     if (a.includes('signed in')||a.includes('signed out')||a.includes('account created')) return 'login';
     if (a.includes('photo')) return 'photo';
     if (a.includes('csv')||a.includes('bulk import')) return 'import';
-    if (a.includes('plot')||a.includes('status')||a.includes('notes')||a.includes('created')||a.includes('removed')) return 'plot';
+    if (a.includes('delivery')) return 'delivery';
+    if (a.includes('snagging')||a.includes('snag')) return 'snag';
+    if (a.includes('plot')||a.includes('status')||a.includes('notes')||a.includes('created')||a.includes('product')||a.includes('date')) return 'plot';
     return 'other';
   }
 
-  function typeLabel(type) {
-    return { login:'Login', photo:'Photo', import:'Import', plot:'Plot', other:'Other' }[type]||'Other';
-  }
+  function typeLabel(t) { return {login:'Login',photo:'Photo',import:'Import',delivery:'Delivery',snag:'Snag',plot:'Plot',other:'Other'}[t]||'Other'; }
 
   function renderLog() {
-    const userFilter=document.getElementById('filter-user').value;
-    const typeFilter=document.getElementById('filter-type').value;
+    const uf=document.getElementById('filter-user').value;
+    const tf=document.getElementById('filter-type').value;
     const q=document.getElementById('filter-search').value.trim().toLowerCase();
     const filtered=allEntries
-      .filter(e=>!userFilter||e.user_email===userFilter)
-      .filter(e=>!typeFilter||getType(e.action)===typeFilter)
+      .filter(e=>!uf||e.user_email===uf)
+      .filter(e=>!tf||getType(e.action)===tf)
       .filter(e=>!q||e.action.toLowerCase().includes(q)||(e.plots?.number||'').toLowerCase().includes(q)||e.user_email.toLowerCase().includes(q));
-
     document.getElementById('filter-count').textContent=filtered.length+' entr'+(filtered.length===1?'y':'ies');
     const body=document.getElementById('log-body');
     const empty=document.getElementById('empty');
-    if (filtered.length===0) { body.innerHTML=''; empty.style.display='block'; return; }
+    if (!filtered.length) { body.innerHTML=''; empty.style.display='block'; return; }
     empty.style.display='none';
-
-    body.innerHTML=filtered.map(e => {
+    body.innerHTML=filtered.map(e=>{
       const dt=new Date(e.created_at);
       const date=dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
       const time=dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-      const type=getType(e.action);
+      const t=getType(e.action);
       return `<div class="log-entry">
         <div class="log-time">${date}<br>${time}</div>
-        <div class="log-type type-${type}">${typeLabel(type)}</div>
+        <div class="log-type type-${t}">${typeLabel(t)}</div>
         <div class="log-action">${e.plots?.number?`<span class="log-plot">Plot ${esc(e.plots.number)}</span> — `:''}${esc(e.action)}</div>
         <div class="log-user">${esc(e.user_email)}</div>
       </div>`;
@@ -182,7 +165,6 @@
   }
 
   function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
   init();
 </script>
 </body>

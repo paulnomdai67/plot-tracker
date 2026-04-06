@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Site Report — Plot Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root { --bg:#0f1117; --surface:#181c27; --surface2:#1e2333; --border:#2a3045; --text:#e8eaf0; --muted:#6b7491; --accent:#4f8ef7; --complete:#3db87a; --snagging:#e05252; --amber:#c48a2f; }
+    *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+    header { background:var(--surface); border-bottom:1px solid var(--border); padding:0 24px; height:60px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; }
+    .logo { display:flex; align-items:center; gap:10px; font-weight:600; font-size:15px; }
+    .logo-icon { width:30px; height:30px; background:var(--accent); border-radius:7px; display:grid; place-items:center; }
+    .logo-icon svg { width:16px; height:16px; }
+    .header-right { display:flex; gap:10px; }
+    .btn-sm { padding:6px 14px; border-radius:6px; font-size:12px; font-weight:500; font-family:'DM Sans',sans-serif; cursor:pointer; transition:all .15s; background:transparent; border:1px solid var(--border); color:var(--muted); text-decoration:none; display:inline-block; }
+    .btn-sm:hover { border-color:var(--accent); color:var(--accent); }
+    main { max-width:900px; margin:0 auto; padding:32px 24px 80px; }
+    h1 { font-size:20px; font-weight:600; margin-bottom:4px; }
+    .page-sub { font-size:13px; color:var(--muted); margin-bottom:28px; }
+
+    .selectors { display:flex; gap:12px; margin-bottom:24px; flex-wrap:wrap; align-items:flex-end; }
+    .sel-group { display:flex; flex-direction:column; gap:6px; }
+    .sel-group label { font-size:11px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:0.07em; }
+    select.report-select { background:var(--surface); border:1px solid var(--border); color:var(--text); border-radius:7px; padding:8px 14px; font-size:13px; font-family:'DM Sans',sans-serif; outline:none; min-width:200px; cursor:pointer; }
+    select.report-select:focus { border-color:var(--accent); }
+    .btn-generate { padding:9px 22px; background:var(--accent); color:#fff; border:none; border-radius:7px; font-size:13px; font-weight:600; font-family:'DM Sans',sans-serif; cursor:pointer; transition:opacity .15s; }
+    .btn-generate:hover { opacity:0.85; }
+    .btn-generate:disabled { opacity:0.5; cursor:not-allowed; }
+    .btn-print { padding:9px 22px; background:var(--complete); color:#fff; border:none; border-radius:7px; font-size:13px; font-weight:600; font-family:'DM Sans',sans-serif; cursor:pointer; transition:opacity .15s; }
+    .btn-print:hover { opacity:0.85; }
+
+    #report-output { display:none; }
+
+    /* Report styles */
+    .report-wrap { background:var(--surface); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+    .report-header { background:var(--surface2); padding:28px 32px; border-bottom:1px solid var(--border); }
+    .report-title { font-size:22px; font-weight:700; margin-bottom:4px; }
+    .report-meta { font-size:13px; color:var(--muted); }
+    .report-date { font-size:12px; color:var(--muted); margin-top:4px; font-family:'DM Mono',monospace; }
+
+    .report-stats { display:grid; grid-template-columns:repeat(5,1fr); gap:0; border-bottom:1px solid var(--border); }
+    .report-stat { padding:20px; text-align:center; border-right:1px solid var(--border); }
+    .report-stat:last-child { border-right:none; }
+    .rs-label { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:6px; font-weight:600; }
+    .rs-value { font-size:28px; font-weight:700; }
+    .rs-complete { color:var(--complete); }
+    .rs-snagging { color:var(--snagging); }
+    .rs-progress { color:var(--accent); }
+    .rs-total { color:var(--text); }
+
+    .progress-section-report { padding:20px 32px; border-bottom:1px solid var(--border); }
+    .progress-bar-wrap { background:var(--surface2); border-radius:6px; height:12px; overflow:hidden; margin-top:8px; }
+    .progress-bar-fill { height:100%; border-radius:6px; background:linear-gradient(90deg,var(--accent),var(--complete)); }
+    .progress-label-row { display:flex; justify-content:space-between; align-items:center; }
+    .progress-label-text { font-size:13px; font-weight:600; }
+    .progress-pct-text { font-size:18px; font-weight:700; color:var(--complete); font-family:'DM Mono',monospace; }
+
+    .report-section { padding:24px 32px; border-bottom:1px solid var(--border); }
+    .report-section:last-child { border-bottom:none; }
+    .section-title { font-size:14px; font-weight:700; color:var(--text); margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+    .section-count { font-size:11px; color:var(--muted); font-weight:400; font-family:'DM Mono',monospace; }
+
+    .plot-row { display:grid; grid-template-columns:80px 1fr 140px 120px; gap:12px; padding:10px 0; border-bottom:1px solid var(--border); align-items:start; font-size:13px; }
+    .plot-row:last-child { border-bottom:none; }
+    .plot-row-header { font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; }
+    .plot-num-r { font-family:'DM Mono',monospace; font-weight:600; }
+    .plot-notes-r { font-size:12px; color:var(--muted); }
+    .plot-notes-r.has-note { color:var(--text); }
+
+    .badge-sm { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:600; }
+    .badge-sm::before { content:''; width:4px; height:4px; border-radius:50%; background:currentColor; flex-shrink:0; }
+    .b-Measured      { background:#1a2040; color:#5b6899; }
+    .b-In-Production { background:#2a1f00; color:#c48a2f; }
+    .b-Ready         { background:#0d2540; color:#3b9ede; }
+    .b-Installed     { background:#1d1040; color:#9b7fe8; }
+    .b-Snagging      { background:#2e0f0f; color:#e05252; }
+    .b-Complete      { background:#0d2a1a; color:#3db87a; }
+
+    .snag-flag { font-size:11px; color:var(--snagging); font-weight:600; }
+    .resolved-flag { font-size:11px; color:var(--complete); font-weight:600; }
+    .defect-tag { font-size:10px; background:var(--snagging-bg); color:var(--snagging); padding:1px 6px; border-radius:3px; display:inline-block; margin-top:3px; }
+
+    .empty-section { font-size:13px; color:var(--muted); font-style:italic; padding:8px 0; }
+
+    /* Print styles */
+    @media print {
+      body { background:#fff; color:#000; }
+      header, .selectors, .btn-print { display:none !important; }
+      .report-wrap { border:1px solid #ccc; }
+      .report-header { background:#f5f7ff; }
+      .report-stats { background:#fff; }
+      .report-section { background:#fff; }
+      .progress-bar-wrap { background:#eee; }
+      main { padding:0; max-width:100%; }
+      #report-output { display:block !important; }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="1.6">
+        <rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.2"/>
+        <rect x="9" y="1.5" width="5.5" height="5.5" rx="1.2"/>
+        <rect x="1.5" y="9" width="5.5" height="5.5" rx="1.2"/>
+        <rect x="9" y="9" width="5.5" height="5.5" rx="1.2"/>
+      </svg>
+    </div>
+    Plot Tracker
+  </div>
+  <div class="header-right">
+    <a href="index.html" class="btn-sm">← Back to Plots</a>
+  </div>
+</header>
+
+<main>
+  <h1>Site Report</h1>
+  <p class="page-sub">Generate a printable progress report for any site — suitable for sharing with developers.</p>
+
+  <div class="selectors">
+    <div class="sel-group">
+      <label>Developer</label>
+      <select class="report-select" id="r-dev" onchange="loadRSites()">
+        <option value="">— Select developer —</option>
+      </select>
+    </div>
+    <div class="sel-group">
+      <label>Site</label>
+      <select class="report-select" id="r-site" disabled>
+        <option value="">— Select site —</option>
+      </select>
+    </div>
+    <button class="btn-generate" onclick="generateReport()">Generate Report</button>
+    <button class="btn-print" onclick="window.print()" id="btn-print" style="display:none">🖨 Print / Save PDF</button>
+  </div>
+
+  <div id="report-output">
+    <div class="report-wrap" id="report-content"></div>
+  </div>
+</main>
+
+<script>
+  const SUPABASE_URL = 'https://fddnkveadygyfjlkuhyl.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZkZG5rdmVhZHlneWZqbGt1aHlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNDUwNzIsImV4cCI6MjA5MDcyMTA3Mn0.23x_7Pl_XvhG4dwiwYVFVmFSaQEuxZZcK1gLC58Q3dM';
+  const { createClient } = supabase;
+  const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  const STATUSES = ["Measured","In Production","Ready","Installed","Snagging","Complete"];
+
+  async function init() {
+    const { data:{ session } } = await sb.auth.getSession();
+    if (!session) { window.location.href='login.html'; return; }
+    const { data } = await sb.from('developers').select('*').order('name');
+    const sel=document.getElementById('r-dev');
+    sel.innerHTML='<option value="">— Select developer —</option>'+(data||[]).map(d=>`<option value="${d.id}" data-name="${d.name}">${d.name}</option>`).join('');
+  }
+
+  async function loadRSites() {
+    const devId=document.getElementById('r-dev').value;
+    const sel=document.getElementById('r-site');
+    if (!devId) { sel.innerHTML='<option value="">— Select site —</option>'; sel.disabled=true; return; }
+    const { data } = await sb.from('sites').select('*').eq('developer_id',devId).order('name');
+    sel.innerHTML='<option value="">— Select site —</option>'+(data||[]).map(s=>`<option value="${s.id}" data-name="${s.name}">${s.name}</option>`).join('');
+    sel.disabled=false;
+  }
+
+  function badgeHtml(status) {
+    const cls='badge-sm b-'+status.replace(/\s+/g,'-');
+    return `<span class="${cls}">${status}</span>`;
+  }
+
+  function fmtDate(d) { return d?new Date(d).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):'—'; }
+  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  async function generateReport() {
+    const devSel=document.getElementById('r-dev');
+    const siteSel=document.getElementById('r-site');
+    const devId=devSel.value;
+    const siteId=siteSel.value;
+    if (!devId||!siteId) { alert('Please select a developer and site.'); return; }
+    const devName=devSel.options[devSel.selectedIndex].dataset.name;
+    const siteName=siteSel.options[siteSel.selectedIndex].dataset.name;
+
+    const btn=document.querySelector('.btn-generate');
+    btn.disabled=true; btn.textContent='Generating…';
+
+    const { data:plots } = await sb.from('plots').select('*').eq('site_id',siteId).order('number');
+    const allPlots=plots||[];
+
+    btn.disabled=false; btn.textContent='Generate Report';
+
+    const total=allPlots.length;
+    const complete=allPlots.filter(p=>p.status==='Complete').length;
+    const snagging=allPlots.filter(p=>p.status==='Snagging').length;
+    const installed=allPlots.filter(p=>p.status==='Installed').length;
+    const inProgress=allPlots.filter(p=>!['Complete','Measured'].includes(p.status)).length;
+    const pct=total===0?0:Math.round((complete/total)*100);
+
+    const byStatus = {};
+    STATUSES.forEach(s=>{ byStatus[s]=allPlots.filter(p=>p.status===s); });
+
+    const today=new Date(); today.setHours(0,0,0,0);
+    const upcoming=allPlots.filter(p=>p.install_date&&p.status!=='Complete'&&new Date(p.install_date)>=today)
+      .sort((a,b)=>new Date(a.install_date)-new Date(b.install_date)).slice(0,10);
+
+    const snaggingPlots=byStatus['Snagging'];
+    const openSnags=snaggingPlots.filter(p=>!p.snag_resolved_at);
+    const resolvedSnags=snaggingPlots.filter(p=>p.snag_resolved_at);
+
+    function plotRows(ps, showProduct=true) {
+      if (!ps.length) return `<div class="empty-section">None</div>`;
+      return `<div class="plot-row plot-row-header"><div>Plot</div><div>${showProduct?'Product / Notes':'Notes'}</div><div>Status</div><div>Install Date</div></div>`+
+        ps.map(p=>`<div class="plot-row">
+          <div class="plot-num-r">Plot ${esc(p.number)}</div>
+          <div>
+            ${p.product_type?`<div style="font-size:12px;font-weight:500">${esc(p.product_type)}</div>`:''}
+            ${p.notes?`<div class="plot-notes-r has-note">${esc(p.notes.slice(0,80))}${p.notes.length>80?'…':''}</div>`:''}
+            ${p.defect_category?`<div class="defect-tag">${esc(p.defect_category)}</div>`:''}
+            ${p.snag_resolved_at?`<div class="resolved-flag">✓ Resolved ${fmtDate(p.snag_resolved_at)}</div>`:''}
+          </div>
+          <div>${badgeHtml(p.status)}</div>
+          <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted)">${fmtDate(p.install_date)}</div>
+        </div>`).join('');
+    }
+
+    const html = `
+      <div class="report-header">
+        <div class="report-title">${esc(devName)} — ${esc(siteName)}</div>
+        <div class="report-meta">Installation Progress Report · Scotia Windows &amp; Doors</div>
+        <div class="report-date">Generated: ${new Date().toLocaleString('en-GB',{day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+      </div>
+
+      <div class="report-stats">
+        <div class="report-stat"><div class="rs-label">Total Plots</div><div class="rs-value rs-total">${total}</div></div>
+        <div class="report-stat"><div class="rs-label">Complete</div><div class="rs-value rs-complete">${complete}</div></div>
+        <div class="report-stat"><div class="rs-label">Installed</div><div class="rs-value rs-progress">${installed}</div></div>
+        <div class="report-stat"><div class="rs-label">Snagging</div><div class="rs-value rs-snagging">${snagging}</div></div>
+        <div class="report-stat"><div class="rs-label">In Progress</div><div class="rs-value rs-progress">${inProgress}</div></div>
+      </div>
+
+      <div class="progress-section-report">
+        <div class="progress-label-row">
+          <span class="progress-label-text">Overall Completion</span>
+          <span class="progress-pct-text">${pct}%</span>
+        </div>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
+      </div>
+
+      ${openSnags.length>0?`
+      <div class="report-section">
+        <div class="section-title">⚠ Outstanding Snagging <span class="section-count">${openSnags.length} open</span></div>
+        ${plotRows(openSnags)}
+      </div>`:''}
+
+      ${upcoming.length>0?`
+      <div class="report-section">
+        <div class="section-title">📅 Upcoming Installations <span class="section-count">${upcoming.length} scheduled</span></div>
+        ${plotRows(upcoming)}
+      </div>`:''}
+
+      ${STATUSES.filter(s=>s!=='Snagging').map(s=>byStatus[s].length>0?`
+      <div class="report-section">
+        <div class="section-title">${badgeHtml(s)} ${s} <span class="section-count">${byStatus[s].length} plot${byStatus[s].length!==1?'s':''}</span></div>
+        ${plotRows(byStatus[s])}
+      </div>`:'').join('')}
+
+      ${resolvedSnags.length>0?`
+      <div class="report-section">
+        <div class="section-title">✓ Resolved Snagging <span class="section-count">${resolvedSnags.length} resolved</span></div>
+        ${plotRows(resolvedSnags)}
+      </div>`:''}
+    `;
+
+    document.getElementById('report-content').innerHTML=html;
+    document.getElementById('report-output').style.display='block';
+    document.getElementById('btn-print').style.display='';
+    document.getElementById('report-output').scrollIntoView({ behavior:'smooth' });
+  }
+
+  init();
+</script>
+</body>
+</html>

@@ -21,6 +21,7 @@
     *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
     body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
 
+    /* Header */
     header { background:var(--surface); border-bottom:1px solid var(--border); padding:0 24px; height:60px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; }
     .header-left { display:flex; align-items:center; gap:16px; }
     .logo { display:flex; align-items:center; gap:10px; font-weight:600; font-size:15px; }
@@ -29,14 +30,18 @@
     .breadcrumb { display:flex; align-items:center; gap:6px; font-size:13px; color:var(--muted); }
     .breadcrumb span { color:var(--text); font-weight:500; }
     .breadcrumb .sep { opacity:0.4; }
-    .header-right { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .header-right { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
     .user-chip { font-size:12px; color:var(--muted); font-family:'DM Mono',monospace; background:var(--surface2); border:1px solid var(--border); padding:4px 10px; border-radius:20px; }
+    .role-badge { font-size:11px; font-weight:600; padding:3px 8px; border-radius:10px; }
+    .role-admin { background:rgba(79,142,247,0.15); color:var(--accent); border:1px solid var(--accent); }
+    .role-standard { background:rgba(107,116,145,0.15); color:var(--muted); border:1px solid var(--border); }
     .btn-sm { padding:6px 14px; border-radius:6px; font-size:12px; font-weight:500; font-family:'DM Sans',sans-serif; cursor:pointer; transition:all .15s; }
     .btn-ghost { background:transparent; border:1px solid var(--border); color:var(--muted); text-decoration:none; display:inline-block; }
     .btn-ghost:hover { border-color:var(--accent); color:var(--accent); }
     .btn-danger { background:transparent; border:1px solid var(--border); color:var(--muted); }
     .btn-danger:hover { border-color:var(--snagging); color:var(--snagging); }
 
+    /* Nav bar */
     .nav-bar { background:var(--surface2); border-bottom:1px solid var(--border); padding:12px 24px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
     .nav-label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.07em; font-weight:600; }
     select.nav-select { background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:7px; padding:7px 12px; font-size:13px; font-family:'DM Sans',sans-serif; outline:none; cursor:pointer; min-width:180px; transition:border .15s; }
@@ -47,40 +52,62 @@
     .btn-nav-add:disabled { opacity:0.4; cursor:not-allowed; }
     .nav-spacer { margin-left:auto; display:flex; gap:8px; }
 
-    main { max-width:1200px; margin:0 auto; padding:28px 24px 80px; }
+    main { max-width:1280px; margin:0 auto; padding:28px 24px 80px; }
 
-    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:28px; }
+    /* Progress bar */
+    .progress-section { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px 20px; margin-bottom:20px; }
+    .progress-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+    .progress-label { font-size:13px; font-weight:600; }
+    .progress-pct { font-size:20px; font-weight:700; color:var(--complete); font-family:'DM Mono',monospace; }
+    .progress-bar-wrap { background:var(--surface2); border-radius:6px; height:10px; overflow:hidden; }
+    .progress-bar-fill { height:100%; border-radius:6px; background:linear-gradient(90deg, var(--accent), var(--complete)); transition:width .6s ease; }
+    .progress-breakdown { display:flex; gap:16px; margin-top:10px; flex-wrap:wrap; }
+    .progress-item { font-size:11px; color:var(--muted); display:flex; align-items:center; gap:5px; }
+    .progress-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+
+    /* Stats */
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:20px; }
     .stat-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:18px 20px 14px; position:relative; overflow:hidden; }
     .stat-card::after { content:''; position:absolute; bottom:0; left:0; right:0; height:3px; background:var(--muted); opacity:0.2; }
     .stat-card.s-complete::after { background:var(--complete); opacity:1; }
     .stat-card.s-snagging::after { background:var(--snagging); opacity:1; }
     .stat-card.s-progress::after { background:var(--accent); opacity:1; }
+    .stat-card.s-upcoming::after { background:#c48a2f; opacity:1; }
     .stat-label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; font-weight:500; margin-bottom:8px; }
     .stat-value { font-size:34px; font-weight:600; line-height:1; }
     .s-complete .stat-value { color:var(--complete); }
     .s-snagging .stat-value { color:var(--snagging); }
     .s-progress .stat-value { color:var(--accent); }
+    .s-upcoming .stat-value { color:#c48a2f; }
 
-    /* Add plot + CSV bar */
+    /* Upcoming jobs banner */
+    .upcoming-bar { background:rgba(196,138,47,0.08); border:1px solid rgba(196,138,47,0.3); border-radius:10px; padding:12px 16px; margin-bottom:20px; display:none; }
+    .upcoming-bar.show { display:block; }
+    .upcoming-title { font-size:12px; font-weight:600; color:#c48a2f; margin-bottom:8px; }
+    .upcoming-list { display:flex; gap:10px; flex-wrap:wrap; }
+    .upcoming-chip { background:rgba(196,138,47,0.12); border:1px solid rgba(196,138,47,0.3); border-radius:6px; padding:5px 10px; font-size:12px; color:#c48a2f; font-family:'DM Mono',monospace; }
+
+    /* Add / CSV bars */
     .add-bar { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px 16px; display:flex; gap:10px; align-items:center; margin-bottom:12px; flex-wrap:wrap; }
     .add-bar-label { font-size:12px; color:var(--muted); font-weight:500; white-space:nowrap; }
-    input[type="text"] { background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:7px; padding:8px 12px; font-size:13px; font-family:'DM Sans',sans-serif; outline:none; transition:border .15s; }
-    input[type="text"]:focus { border-color:var(--accent); }
+    input[type="text"], input[type="date"] { background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:7px; padding:8px 12px; font-size:13px; font-family:'DM Sans',sans-serif; outline:none; transition:border .15s; }
+    input[type="text"]:focus, input[type="date"]:focus { border-color:var(--accent); }
     input[type="text"]::placeholder { color:var(--muted); }
+    input[type="date"] { color-scheme:dark; }
     #inp-number { width:110px; }
+    #inp-install-date { width:150px; }
+    select.inp-select { background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:7px; padding:8px 12px; font-size:13px; font-family:'DM Sans',sans-serif; outline:none; cursor:pointer; }
+    select.inp-select:focus { border-color:var(--accent); }
     .btn-add { padding:8px 20px; background:var(--accent); color:#fff; border:none; border-radius:7px; font-size:13px; font-weight:600; font-family:'DM Sans',sans-serif; cursor:pointer; transition:opacity .15s; }
     .btn-add:hover { opacity:0.85; }
     .btn-add:disabled { opacity:0.5; cursor:not-allowed; }
 
-    /* CSV bar */
     .csv-bar { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px 16px; display:flex; gap:12px; align-items:center; margin-bottom:20px; flex-wrap:wrap; }
     .csv-info { font-size:12px; color:var(--muted); flex:1; }
     .csv-info strong { color:var(--text); }
     .csv-upload-label { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; background:transparent; border:1px solid var(--border); color:var(--muted); border-radius:7px; font-size:12px; font-weight:500; cursor:pointer; transition:all .15s; }
     .csv-upload-label:hover { border-color:var(--accent); color:var(--accent); }
     #csv-file-input { display:none; }
-    .btn-csv-download { padding:8px 14px; background:transparent; border:1px solid var(--border); color:var(--muted); border-radius:7px; font-size:12px; font-weight:500; font-family:'DM Sans',sans-serif; cursor:pointer; transition:all .15s; }
-    .btn-csv-download:hover { border-color:var(--complete); color:var(--complete); }
 
     /* Toolbar */
     .toolbar { display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
@@ -94,14 +121,14 @@
     /* Table */
     .table-wrap { background:var(--surface); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
     table { width:100%; border-collapse:collapse; font-size:13px; }
-    thead th { background:var(--surface2); padding:10px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.07em; border-bottom:1px solid var(--border); }
+    thead th { background:var(--surface2); padding:10px 14px; text-align:left; font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.07em; border-bottom:1px solid var(--border); white-space:nowrap; }
     tbody tr { border-bottom:1px solid var(--border); transition:background .1s; }
     tbody tr:last-child { border-bottom:none; }
     tbody tr:hover { background:var(--surface2); }
-    td { padding:11px 16px; vertical-align:middle; }
+    td { padding:10px 14px; vertical-align:middle; }
     .plot-num { font-family:'DM Mono',monospace; font-weight:500; font-size:14px; }
 
-    .badge { display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:5px; font-size:11px; font-weight:600; letter-spacing:0.03em; width:fit-content; }
+    .badge { display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:5px; font-size:11px; font-weight:600; letter-spacing:0.03em; width:fit-content; white-space:nowrap; }
     .badge::before { content:''; width:5px; height:5px; border-radius:50%; background:currentColor; flex-shrink:0; }
     .badge-Measured      { background:var(--measured-bg);    color:var(--measured); }
     .badge-In-Production { background:var(--production-bg);  color:var(--production); }
@@ -113,25 +140,37 @@
     .status-select { background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:6px; padding:5px 8px; font-size:12px; font-family:'DM Sans',sans-serif; cursor:pointer; outline:none; width:142px; margin-bottom:5px; }
     .status-select:focus { border-color:var(--accent); }
 
-    .notes-view { font-size:12px; color:var(--muted); cursor:pointer; padding:4px 7px; border-radius:5px; border:1px solid transparent; transition:border .15s,color .15s; min-height:28px; max-width:260px; line-height:1.5; }
+    .product-cell { font-size:11px; color:var(--muted); max-width:140px; }
+    .product-cell.has-product { color:var(--text); font-weight:500; }
+
+    .date-cell { font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); white-space:nowrap; }
+    .date-cell.overdue { color:var(--snagging); }
+    .date-cell.soon { color:#c48a2f; }
+    .date-cell.ok { color:var(--complete); }
+
+    .notes-view { font-size:12px; color:var(--muted); cursor:pointer; padding:4px 7px; border-radius:5px; border:1px solid transparent; transition:border .15s,color .15s; min-height:28px; max-width:220px; line-height:1.5; }
     .notes-view:hover { border-color:var(--border); color:var(--text); }
     .notes-view.has-note { color:var(--text); }
-    .notes-input { width:100%; max-width:260px; background:var(--bg); border:1px solid var(--accent); color:var(--text); border-radius:5px; padding:5px 8px; font-size:12px; font-family:'DM Sans',sans-serif; outline:none; resize:vertical; }
+    .notes-input { width:100%; max-width:220px; background:var(--bg); border:1px solid var(--accent); color:var(--text); border-radius:5px; padding:5px 8px; font-size:12px; font-family:'DM Sans',sans-serif; outline:none; resize:vertical; }
+
+    /* Snag resolved badge */
+    .snag-resolved { display:inline-flex; align-items:center; gap:4px; padding:2px 7px; border-radius:4px; font-size:10px; font-weight:600; background:var(--complete-bg); color:var(--complete); margin-top:4px; }
+
+    .btn-photo { display:inline-flex; align-items:center; gap:4px; padding:4px 9px; border-radius:5px; font-size:11px; font-weight:500; background:transparent; border:1px solid var(--border); color:var(--muted); cursor:pointer; transition:all .15s; font-family:'DM Sans',sans-serif; white-space:nowrap; }
+    .btn-photo:hover { border-color:var(--snagging); color:var(--snagging); }
+    .btn-photo.has-photos { border-color:rgba(155,127,232,0.4); color:#9b7fe8; }
 
     .updated-cell { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); white-space:nowrap; }
     .updated-by { font-size:10px; color:var(--muted); margin-top:2px; }
 
-    /* Photo cell */
-    .photo-cell { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
-    .photo-thumb { width:36px; height:36px; border-radius:5px; object-fit:cover; border:1px solid var(--border); cursor:pointer; transition:opacity .15s; }
-    .photo-thumb:hover { opacity:0.8; }
-    .btn-photo-upload { display:inline-flex; align-items:center; gap:4px; padding:4px 9px; border-radius:5px; font-size:11px; font-weight:500; background:transparent; border:1px solid var(--border); color:var(--muted); cursor:pointer; transition:all .15s; font-family:'DM Sans',sans-serif; white-space:nowrap; }
-    .btn-photo-upload:hover { border-color:var(--snagging); color:var(--snagging); }
-    .photo-file-input { display:none; }
-    .photo-count { font-size:10px; color:var(--muted); font-family:'DM Mono',monospace; }
+    .btn-actions { display:flex; gap:4px; }
+    .btn-icon { background:transparent; border:1px solid var(--border); color:var(--muted); border-radius:6px; padding:5px 9px; font-size:12px; cursor:pointer; transition:all .15s; }
+    .btn-icon:hover { border-color:var(--snagging); color:var(--snagging); }
+    .btn-icon.btn-delivery { border-color:rgba(196,138,47,0.3); color:#c48a2f; }
+    .btn-icon.btn-delivery:hover { border-color:#c48a2f; }
 
-    .btn-delete { background:transparent; border:1px solid var(--border); color:var(--muted); border-radius:6px; padding:5px 10px; font-size:12px; cursor:pointer; transition:all .15s; font-family:'DM Sans',sans-serif; }
-    .btn-delete:hover { border-color:var(--snagging); color:var(--snagging); }
+    /* Defect category badge */
+    .defect-badge { display:inline-block; padding:2px 7px; border-radius:4px; font-size:10px; font-weight:600; background:var(--snagging-bg); color:var(--snagging); margin-top:3px; }
 
     .empty { text-align:center; padding:64px 20px; color:var(--muted); }
     .empty-icon { font-size:36px; margin-bottom:12px; opacity:0.4; }
@@ -145,18 +184,23 @@
     /* Modals */
     .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.65); display:flex; align-items:center; justify-content:center; z-index:200; opacity:0; pointer-events:none; transition:opacity .2s; }
     .modal-overlay.open { opacity:1; pointer-events:all; }
-    .modal { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:28px; width:90%; max-width:480px; transform:translateY(16px); transition:transform .2s; max-height:90vh; overflow-y:auto; }
+    .modal { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:28px; width:90%; max-width:520px; transform:translateY(16px); transition:transform .2s; max-height:90vh; overflow-y:auto; }
     .modal-overlay.open .modal { transform:translateY(0); }
-    .modal h2 { font-size:15px; margin-bottom:6px; }
-    .modal p { font-size:13px; color:var(--muted); margin-bottom:16px; }
+    .modal h2 { font-size:15px; font-weight:600; margin-bottom:6px; }
+    .modal p.modal-sub { font-size:13px; color:var(--muted); margin-bottom:16px; }
     .modal-btns { display:flex; gap:10px; justify-content:flex-end; margin-top:20px; }
     .modal label { display:block; font-size:12px; font-weight:500; color:var(--muted); margin-bottom:6px; margin-top:14px; }
-    .modal input[type="text"] { width:100%; margin-bottom:4px; }
+    .modal input[type="text"], .modal input[type="date"], .modal select, .modal textarea { width:100%; background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:7px; padding:8px 12px; font-size:13px; font-family:'DM Sans',sans-serif; outline:none; transition:border .15s; margin-bottom:4px; }
+    .modal input:focus, .modal select:focus, .modal textarea:focus { border-color:var(--accent); }
+    .modal input[type="date"] { color-scheme:dark; }
+    .modal textarea { resize:vertical; min-height:80px; }
+    .modal select { cursor:pointer; }
     .btn-cancel { padding:8px 18px; background:transparent; border:1px solid var(--border); color:var(--muted); border-radius:7px; font-size:13px; font-family:'DM Sans',sans-serif; cursor:pointer; }
     .btn-confirm { padding:8px 18px; background:var(--accent); color:#fff; border:none; border-radius:7px; font-size:13px; font-weight:600; font-family:'DM Sans',sans-serif; cursor:pointer; }
     .btn-confirm-delete { padding:8px 18px; background:var(--snagging); color:#fff; border:none; border-radius:7px; font-size:13px; font-weight:600; font-family:'DM Sans',sans-serif; cursor:pointer; }
+    .btn-confirm-green { padding:8px 18px; background:var(--complete); color:#fff; border:none; border-radius:7px; font-size:13px; font-weight:600; font-family:'DM Sans',sans-serif; cursor:pointer; }
 
-    /* Photo viewer modal */
+    /* Photo modal */
     .photo-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:10px; margin-top:12px; }
     .photo-item { position:relative; }
     .photo-item img { width:100%; aspect-ratio:1; object-fit:cover; border-radius:7px; border:1px solid var(--border); cursor:pointer; }
@@ -168,15 +212,33 @@
     .upload-zone input { display:none; }
 
     /* CSV preview */
-    .csv-preview { margin-top:12px; max-height:200px; overflow-y:auto; background:var(--bg); border:1px solid var(--border); border-radius:7px; padding:10px; font-size:12px; font-family:'DM Mono',monospace; color:var(--muted); }
-    .csv-preview .csv-row { padding:3px 0; border-bottom:1px solid var(--border); }
-    .csv-preview .csv-row:last-child { border-bottom:none; }
-    .csv-preview .csv-ok { color:var(--complete); }
-    .csv-preview .csv-skip { color:var(--snagging); }
+    .csv-preview { margin-top:12px; max-height:180px; overflow-y:auto; background:var(--bg); border:1px solid var(--border); border-radius:7px; padding:10px; font-size:12px; font-family:'DM Mono',monospace; }
+    .csv-row { padding:3px 0; border-bottom:1px solid var(--border); }
+    .csv-row:last-child { border-bottom:none; }
+    .csv-ok { color:var(--complete); }
+    .csv-skip { color:var(--snagging); }
+
+    /* Delivery list in modal */
+    .delivery-list { margin-top:12px; }
+    .delivery-item { background:var(--bg); border:1px solid var(--border); border-radius:7px; padding:10px 12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+    .delivery-info { flex:1; }
+    .delivery-item-name { font-size:13px; font-weight:500; margin-bottom:3px; }
+    .delivery-meta { font-size:11px; color:var(--muted); font-family:'DM Mono',monospace; }
+    .delivery-status-badge { font-size:11px; font-weight:600; padding:2px 8px; border-radius:4px; white-space:nowrap; }
+    .ds-Pending  { background:rgba(107,116,145,0.2); color:var(--muted); }
+    .ds-On-Order { background:rgba(59,158,222,0.15); color:#3b9ede; }
+    .ds-Arrived  { background:var(--complete-bg); color:var(--complete); }
+    .ds-Delayed  { background:var(--snagging-bg); color:var(--snagging); }
+    .btn-del-delivery { background:transparent; border:none; color:var(--muted); cursor:pointer; font-size:14px; padding:2px 4px; }
+    .btn-del-delivery:hover { color:var(--snagging); }
+
+    /* Admin panel */
+    .admin-notice { background:rgba(79,142,247,0.08); border:1px solid rgba(79,142,247,0.3); border-radius:8px; padding:10px 14px; font-size:12px; color:var(--accent); margin-bottom:12px; }
 
     #toast { position:fixed; bottom:28px; right:28px; background:var(--surface2); border:1px solid var(--complete); color:var(--complete); padding:10px 18px; border-radius:8px; font-size:13px; font-weight:500; opacity:0; transform:translateY(8px); pointer-events:none; transition:opacity .25s,transform .25s; z-index:999; }
     #toast.show { opacity:1; transform:translateY(0); }
 
+    @media (max-width:900px) { .hide-md { display:none; } }
     @media (max-width:768px) {
       .stats { grid-template-columns:repeat(2,1fr); }
       .hide-mobile { display:none; }
@@ -206,7 +268,9 @@
   </div>
   <div class="header-right">
     <span class="user-chip" id="user-chip">…</span>
+    <span class="role-badge" id="role-badge"></span>
     <a href="log.html" class="btn-sm btn-ghost">Activity Log</a>
+    <a href="report.html" class="btn-sm btn-ghost">📄 Report</a>
     <button class="btn-sm btn-ghost" onclick="exportCSV()">↓ CSV</button>
     <button class="btn-sm btn-danger" onclick="signOut()">Sign out</button>
   </div>
@@ -223,7 +287,7 @@
     <option value="">— Select site —</option>
   </select>
   <div class="nav-spacer">
-    <button class="btn-nav-add" onclick="showAddDev()">+ Developer</button>
+    <button class="btn-nav-add" id="btn-add-dev" onclick="showAddDev()">+ Developer</button>
     <button class="btn-nav-add" id="btn-add-site" onclick="showAddSite()" disabled>+ Site</button>
   </div>
 </div>
@@ -236,6 +300,26 @@
   </div>
 
   <div id="site-content" style="display:none">
+
+    <!-- Progress bar -->
+    <div class="progress-section">
+      <div class="progress-header">
+        <span class="progress-label" id="progress-label">Site Progress</span>
+        <span class="progress-pct" id="progress-pct">0%</span>
+      </div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="progress-bar" style="width:0%"></div>
+      </div>
+      <div class="progress-breakdown" id="progress-breakdown"></div>
+    </div>
+
+    <!-- Upcoming installations -->
+    <div class="upcoming-bar" id="upcoming-bar">
+      <div class="upcoming-title">📅 Upcoming Installations (next 7 days)</div>
+      <div class="upcoming-list" id="upcoming-list"></div>
+    </div>
+
+    <!-- Stats -->
     <div class="stats">
       <div class="stat-card"><div class="stat-label">Total Plots</div><div class="stat-value" id="stat-total">0</div></div>
       <div class="stat-card s-complete"><div class="stat-label">Complete</div><div class="stat-value" id="stat-complete">0</div></div>
@@ -243,22 +327,42 @@
       <div class="stat-card s-snagging"><div class="stat-label">Snagging</div><div class="stat-value" id="stat-snagging">0</div></div>
     </div>
 
-    <!-- Add single plot -->
-    <div class="add-bar">
+    <!-- Add plot (admin only) -->
+    <div class="add-bar" id="add-bar" style="display:none">
       <span class="add-bar-label">New Plot</span>
-      <input id="inp-number" type="text" placeholder="Plot No. e.g. 42"/>
+      <input id="inp-number" type="text" placeholder="Plot No."/>
+      <select id="inp-product" class="inp-select">
+        <option value="">— Product type —</option>
+        <optgroup label="Windows">
+          <option>Casement Window</option>
+          <option>Tilt & Turn Window</option>
+          <option>Fully Reversible Window</option>
+          <option>Vertical Slider Window</option>
+          <option>Aluminium Window</option>
+        </optgroup>
+        <optgroup label="Doors">
+          <option>Composite Door</option>
+          <option>uPVC Door</option>
+          <option>Aluminium Entrance Door</option>
+          <option>Patio Sliding Door</option>
+          <option>Bifold Door (uPVC)</option>
+          <option>Aluminium Sliding & Folding Door</option>
+        </optgroup>
+        <optgroup label="Other">
+          <option>Curtain Walling</option>
+          <option>Mixed — See Notes</option>
+        </optgroup>
+      </select>
+      <input id="inp-install-date" type="date" title="Scheduled installation date"/>
       <button class="btn-add" onclick="addPlot()">+ Add Plot</button>
     </div>
 
-    <!-- CSV upload -->
-    <div class="csv-bar">
-      <div class="csv-info">
-        <strong>Bulk import via CSV</strong> — Upload a CSV file with plot numbers to add multiple plots at once.
-        <span style="color:var(--accent);cursor:pointer;margin-left:6px;" onclick="downloadCSVTemplate()">↓ Download template</span>
+    <!-- CSV bar (admin only) -->
+    <div class="csv-bar" id="csv-bar" style="display:none">
+      <div class="csv-info"><strong>Bulk import via CSV</strong> — Upload plot numbers.
+        <span style="color:var(--accent);cursor:pointer;margin-left:6px;" onclick="downloadCSVTemplate()">↓ Template</span>
       </div>
-      <label class="csv-upload-label" for="csv-file-input">
-        📂 Choose CSV file
-      </label>
+      <label class="csv-upload-label" for="csv-file-input">📂 Choose CSV</label>
       <input type="file" id="csv-file-input" accept=".csv" onchange="handleCSVUpload(this)"/>
     </div>
 
@@ -275,10 +379,12 @@
         <thead>
           <tr>
             <th>Plot</th>
+            <th>Product</th>
             <th>Status</th>
             <th class="hide-mobile">Notes / Issues</th>
+            <th class="hide-mobile">Install Date</th>
             <th class="hide-mobile">Photos</th>
-            <th class="hide-mobile">Last Updated</th>
+            <th class="hide-mobile hide-md">Last Updated</th>
             <th></th>
           </tr>
         </thead>
@@ -294,7 +400,7 @@
 <div class="modal-overlay" id="modal-dev">
   <div class="modal">
     <h2>Add Developer</h2>
-    <p>Add a new house builder / developer.</p>
+    <p class="modal-sub">Add a new house builder / developer.</p>
     <label>Developer Name</label>
     <input type="text" id="inp-dev-name" placeholder="e.g. Barrett Homes"/>
     <div class="modal-btns">
@@ -308,7 +414,7 @@
 <div class="modal-overlay" id="modal-site">
   <div class="modal">
     <h2>Add Site</h2>
-    <p id="modal-site-sub">Add a new development site.</p>
+    <p class="modal-sub" id="modal-site-sub">Add a new development site.</p>
     <label>Site Name</label>
     <input type="text" id="inp-site-name" placeholder="e.g. Maple Lane"/>
     <div class="modal-btns">
@@ -322,7 +428,7 @@
 <div class="modal-overlay" id="modal-delete">
   <div class="modal">
     <h2>Remove Plot?</h2>
-    <p>This will permanently delete this plot, its notes, photos, and audit history.</p>
+    <p class="modal-sub">This will permanently delete this plot, its photos and audit history.</p>
     <div class="modal-btns">
       <button class="btn-cancel" onclick="closeModals()">Cancel</button>
       <button class="btn-confirm-delete" onclick="confirmDelete()">Remove Plot</button>
@@ -330,24 +436,109 @@
   </div>
 </div>
 
-<!-- CSV Preview Modal -->
-<div class="modal-overlay" id="modal-csv">
+<!-- Edit Plot Modal (product + date) -->
+<div class="modal-overlay" id="modal-edit">
   <div class="modal">
-    <h2>Import Plots from CSV</h2>
-    <p id="csv-summary"></p>
-    <div class="csv-preview" id="csv-preview"></div>
+    <h2>Edit Plot Details</h2>
+    <p class="modal-sub" id="edit-plot-title">Update product type and installation date.</p>
+    <label>Product Type</label>
+    <select id="edit-product">
+      <option value="">— Not set —</option>
+      <optgroup label="Windows">
+        <option>Casement Window</option>
+        <option>Tilt & Turn Window</option>
+        <option>Fully Reversible Window</option>
+        <option>Vertical Slider Window</option>
+        <option>Aluminium Window</option>
+      </optgroup>
+      <optgroup label="Doors">
+        <option>Composite Door</option>
+        <option>uPVC Door</option>
+        <option>Aluminium Entrance Door</option>
+        <option>Patio Sliding Door</option>
+        <option>Bifold Door (uPVC)</option>
+        <option>Aluminium Sliding & Folding Door</option>
+      </optgroup>
+      <optgroup label="Other">
+        <option>Curtain Walling</option>
+        <option>Mixed — See Notes</option>
+      </optgroup>
+    </select>
+    <label>Scheduled Installation Date</label>
+    <input type="date" id="edit-install-date"/>
     <div class="modal-btns">
       <button class="btn-cancel" onclick="closeModals()">Cancel</button>
-      <button class="btn-confirm" id="btn-csv-confirm" onclick="confirmCSVImport()">Import Plots</button>
+      <button class="btn-confirm" onclick="saveEditPlot()">Save Changes</button>
     </div>
   </div>
 </div>
 
-<!-- Photo Viewer Modal -->
+<!-- Snagging Sign-Off Modal -->
+<div class="modal-overlay" id="modal-snag">
+  <div class="modal">
+    <h2>Snagging Details</h2>
+    <p class="modal-sub" id="snag-plot-title">Record defect category and sign-off.</p>
+    <label>Defect Category</label>
+    <select id="snag-category">
+      <option value="">— Select category —</option>
+      <option>Damaged Glass</option>
+      <option>Missing Hardware</option>
+      <option>Measurement Error</option>
+      <option>Incorrect Product</option>
+      <option>Installation Issue</option>
+      <option>Seal / Draught Issue</option>
+      <option>Lock / Handle Fault</option>
+      <option>Frame Damage</option>
+      <option>Site Delay</option>
+      <option>Other — See Notes</option>
+    </select>
+    <label>Resolution Notes</label>
+    <textarea id="snag-notes" placeholder="Describe what was done to resolve the issue…"></textarea>
+    <div id="snag-resolved-info" style="display:none;margin-top:10px;">
+      <div class="snag-resolved" style="display:inline-flex;">✓ Resolved</div>
+      <p style="font-size:11px;color:var(--muted);margin-top:6px;" id="snag-resolved-by-text"></p>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModals()">Close</button>
+      <button class="btn-confirm-green" id="snag-signoff-btn" onclick="signOffSnag()">✓ Mark Resolved</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delivery Modal -->
+<div class="modal-overlay" id="modal-delivery">
+  <div class="modal" style="max-width:560px">
+    <h2>Delivery Tracking</h2>
+    <p class="modal-sub" id="delivery-plot-title">Track material deliveries for this plot.</p>
+    <div class="delivery-list" id="delivery-list"></div>
+    <div id="delivery-loading" style="font-size:13px;color:var(--muted);padding:8px 0">Loading…</div>
+    <hr style="border:none;border-top:1px solid var(--border);margin:16px 0;"/>
+    <h3 style="font-size:13px;font-weight:600;margin-bottom:8px;">Add Delivery Item</h3>
+    <label>Item Description</label>
+    <input type="text" id="del-item" placeholder="e.g. Front door frame, Bedroom 1 window"/>
+    <label>Expected Arrival Date</label>
+    <input type="date" id="del-expected"/>
+    <label>Status</label>
+    <select id="del-status">
+      <option value="Pending">Pending</option>
+      <option value="On Order">On Order</option>
+      <option value="Arrived">Arrived</option>
+      <option value="Delayed">Delayed</option>
+    </select>
+    <label>Notes (optional)</label>
+    <input type="text" id="del-notes" placeholder="e.g. Supplier confirmed dispatch"/>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModals()">Close</button>
+      <button class="btn-confirm" onclick="addDelivery()">Add Item</button>
+    </div>
+  </div>
+</div>
+
+<!-- Photo Modal -->
 <div class="modal-overlay" id="modal-photos">
   <div class="modal" style="max-width:600px">
-    <h2 id="photo-modal-title">Photos — Plot</h2>
-    <p>Click a photo to view full size. Upload new snagging photos below.</p>
+    <h2 id="photo-modal-title">Snagging Photos</h2>
+    <p class="modal-sub">Click a photo to view full size.</p>
     <div class="photo-grid" id="photo-grid"></div>
     <div class="upload-zone" onclick="document.getElementById('photo-upload-input').click()">
       <p>📷 Click to upload photos</p>
@@ -360,33 +551,69 @@
   </div>
 </div>
 
+<!-- CSV Modal -->
+<div class="modal-overlay" id="modal-csv">
+  <div class="modal">
+    <h2>Import Plots from CSV</h2>
+    <p class="modal-sub" id="csv-summary"></p>
+    <div class="csv-preview" id="csv-preview"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModals()">Cancel</button>
+      <button class="btn-confirm" id="btn-csv-confirm" onclick="confirmCSVImport()">Import</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
   const SUPABASE_URL = 'https://fddnkveadygyfjlkuhyl.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZkZG5rdmVhZHlneWZqbGt1aHlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNDUwNzIsImV4cCI6MjA5MDcyMTA3Mn0.23x_7Pl_XvhG4dwiwYVFVmFSaQEuxZZcK1gLC58Q3dM';
-
   const { createClient } = supabase;
   const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
   const STATUSES = ["Measured","In Production","Ready","Installed","Snagging","Complete"];
+  const STATUS_COLORS = { Measured:'#5b6899', 'In Production':'#c48a2f', Ready:'#3b9ede', Installed:'#9b7fe8', Snagging:'#e05252', Complete:'#3db87a' };
 
-  let currentUser=null, developers=[], sites=[], plots=[], photoCounts={};
+  let currentUser=null, userRole='standard';
+  let developers=[], sites=[], plots=[], photoCounts={};
   let currentDevId=null, currentSiteId=null, filterStatus='', pendingDeleteId=null;
-  let csvPendingRows=[], currentPhotoPlotId=null;
+  let csvPendingRows=[], currentPhotoPlotId=null, currentSnagPlotId=null, currentDeliveryPlotId=null, currentEditPlotId=null;
 
-  // ── Auth ─────────────────────────────────────────────────
+  // ── Auth & Role ──────────────────────────────────────────
   async function init() {
-    const { data: { session } } = await sb.auth.getSession();
+    const { data:{ session } } = await sb.auth.getSession();
     if (!session) { window.location.href='login.html'; return; }
     currentUser = session.user;
-    document.getElementById('user-chip').textContent = currentUser.user_metadata?.full_name || currentUser.email;
+    const name = currentUser.user_metadata?.full_name || currentUser.email;
+    document.getElementById('user-chip').textContent = name;
+
+    // Load role
+    const { data:roleData } = await sb.from('user_roles').select('role').eq('user_id', currentUser.id).single();
+    userRole = roleData?.role || 'standard';
+    const badge = document.getElementById('role-badge');
+    badge.textContent = userRole === 'admin' ? 'Admin' : 'Standard';
+    badge.className = 'role-badge ' + (userRole==='admin' ? 'role-admin' : 'role-standard');
+
     await loadDevelopers();
   }
+
   async function signOut() {
     const name = currentUser.user_metadata?.full_name || currentUser.email;
     await sb.from('audit_log').insert({ plot_id:null, site_id:null, user_email:name, action:'Signed out' });
     await sb.auth.signOut();
     window.location.href='login.html';
+  }
+
+  function isAdmin() { return userRole === 'admin'; }
+
+  function applyRoleUI() {
+    const adminEls = ['add-bar','csv-bar','btn-add-dev'];
+    adminEls.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = isAdmin() ? (id==='add-bar'||id==='csv-bar' ? 'flex':'') : 'none';
+    });
+    document.getElementById('btn-add-site').style.display = isAdmin() ? '' : 'none';
   }
 
   // ── Developers / Sites ───────────────────────────────────
@@ -424,6 +651,7 @@
     if (!currentSiteId) { document.getElementById('site-content').style.display='none'; document.getElementById('placeholder').style.display='block'; return; }
     document.getElementById('placeholder').style.display='none';
     document.getElementById('site-content').style.display='block';
+    applyRoleUI();
     await loadPlots();
   }
 
@@ -442,26 +670,42 @@
     document.getElementById('empty-state').style.display='none';
     const { data } = await sb.from('plots').select('*').eq('site_id',currentSiteId).order('number');
     plots=data||[];
-    // Load photo counts
-    const plotIds = plots.map(p=>p.id);
-    if (plotIds.length > 0) {
-      const { data: photoData } = await sb.from('snagging_photos').select('plot_id').in('plot_id', plotIds);
-      photoCounts = {};
-      (photoData||[]).forEach(p => { photoCounts[p.plot_id] = (photoCounts[p.plot_id]||0)+1; });
+    const plotIds=plots.map(p=>p.id);
+    if (plotIds.length>0) {
+      const { data:pd } = await sb.from('snagging_photos').select('plot_id').in('plot_id',plotIds);
+      photoCounts={};
+      (pd||[]).forEach(p=>{ photoCounts[p.plot_id]=(photoCounts[p.plot_id]||0)+1; });
     }
     document.getElementById('loading').style.display='none';
     renderPlots();
+    updateProgress();
+    updateUpcoming();
   }
 
   function filteredPlots() {
     const q=document.getElementById('search').value.trim().toLowerCase();
     return plots
       .filter(p=>!filterStatus||p.status===filterStatus)
-      .filter(p=>!q||p.number.toLowerCase().includes(q)||p.notes.toLowerCase().includes(q))
+      .filter(p=>!q||p.number.toLowerCase().includes(q)||p.notes.toLowerCase().includes(q)||(p.product_type||'').toLowerCase().includes(q))
       .sort((a,b)=>a.number.padStart(10,'0').localeCompare(b.number.padStart(10,'0')));
   }
 
   function badgeClass(s) { return 'badge badge-'+s.replace(/\s+/g,'-'); }
+
+  function dateClass(dateStr) {
+    if (!dateStr) return '';
+    const today=new Date(); today.setHours(0,0,0,0);
+    const d=new Date(dateStr);
+    if (d<today) return 'overdue';
+    const diff=(d-today)/(1000*60*60*24);
+    if (diff<=7) return 'soon';
+    return 'ok';
+  }
+
+  function fmtDate(dateStr) {
+    if (!dateStr) return '—';
+    return new Date(dateStr).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+  }
 
   function renderPlots() {
     updateStats(); buildPills();
@@ -471,22 +715,30 @@
     const q=document.getElementById('search').value.trim();
     if (visible.length===0) {
       tbody.innerHTML=''; empty.style.display='block';
-      document.getElementById('empty-msg').textContent=q?`No plots match "${q}".`:filterStatus?`No plots with status "${filterStatus}".`:'No plots yet. Add the first plot above.';
+      document.getElementById('empty-msg').textContent=q?`No plots match "${q}".`:filterStatus?`No plots with status "${filterStatus}".`:'No plots yet.';
       document.getElementById('toolbar-count').textContent='No plots'; return;
     }
     empty.style.display='none';
     document.getElementById('toolbar-count').textContent=(filterStatus||q)?`Showing ${visible.length} of ${plots.length} plots`:`All plots (${plots.length})`;
 
-    tbody.innerHTML=visible.map(p => {
-      const count = photoCounts[p.id]||0;
-      return `
-      <tr id="row-${p.id}">
+    const canEdit = isAdmin();
+
+    tbody.innerHTML=visible.map(p=>{
+      const count=photoCounts[p.id]||0;
+      const dc=dateClass(p.install_date);
+      const isSnagging=p.status==='Snagging';
+      return `<tr id="row-${p.id}">
         <td><div class="plot-num">Plot ${esc(p.number)}</div></td>
         <td>
-          <select class="status-select" onchange="updateStatus('${p.id}',this.value)">
+          <div class="product-cell ${p.product_type?'has-product':''}" ${canEdit?`onclick="openEditModal('${p.id}')" style="cursor:pointer" title="Click to edit"`:''}>${p.product_type||'<span style="opacity:.4">—</span>'}</div>
+        </td>
+        <td>
+          <select class="status-select" onchange="updateStatus('${p.id}',this.value)" ${!canEdit&&!['Snagging','Installed','Complete'].includes(p.status)?'disabled':''}>
             ${STATUSES.map(s=>`<option value="${s}" ${p.status===s?'selected':''}>${s}</option>`).join('')}
           </select>
           <span class="${badgeClass(p.status)}" id="badge-${p.id}">${p.status}</span>
+          ${isSnagging&&p.snag_resolved_at?`<div class="snag-resolved">✓ Resolved ${fmtDate(p.snag_resolved_at)}</div>`:''}
+          ${isSnagging&&p.defect_category?`<div class="defect-badge">${esc(p.defect_category)}</div>`:''}
         </td>
         <td class="hide-mobile">
           <div class="notes-view ${p.notes?'has-note':''}" id="notes-view-${p.id}" onclick="editNotes('${p.id}')">${p.notes?esc(p.notes):'Click to add notes…'}</div>
@@ -496,17 +748,24 @@
           >${esc(p.notes)}</textarea>
         </td>
         <td class="hide-mobile">
-          <div class="photo-cell">
-            <button class="btn-photo-upload" onclick="openPhotoModal('${p.id}','${esc(p.number)}')">
-              📷 ${count > 0 ? count + ' photo' + (count>1?'s':'') : 'Add photos'}
-            </button>
-          </div>
+          <div class="date-cell ${dc}" ${canEdit?`onclick="openEditModal('${p.id}')" style="cursor:pointer" title="Click to edit"`:''}>${fmtDate(p.install_date)}</div>
         </td>
-        <td class="updated-cell hide-mobile" id="updated-${p.id}">
+        <td class="hide-mobile">
+          <button class="btn-photo ${count>0?'has-photos':''}" onclick="openPhotoModal('${p.id}','${esc(p.number)}')">
+            📷 ${count>0?count+' photo'+(count>1?'s':''):'Add'}
+          </button>
+        </td>
+        <td class="updated-cell hide-mobile hide-md" id="updated-${p.id}">
           ${p.updated_at?new Date(p.updated_at).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—'}
           ${p.updated_by?`<div class="updated-by">${esc(p.updated_by)}</div>`:''}
         </td>
-        <td><button class="btn-delete" onclick="askDelete('${p.id}')">✕</button></td>
+        <td>
+          <div class="btn-actions">
+            ${isSnagging?`<button class="btn-icon" title="Snagging details" onclick="openSnagModal('${p.id}','${esc(p.number)}')">🔧</button>`:''}
+            <button class="btn-icon btn-delivery" title="Deliveries" onclick="openDeliveryModal('${p.id}','${esc(p.number)}')">📦</button>
+            ${canEdit?`<button class="btn-icon" title="Delete" onclick="askDelete('${p.id}')">✕</button>`:''}
+          </div>
+        </td>
       </tr>`;
     }).join('');
   }
@@ -518,6 +777,37 @@
     document.getElementById('stat-progress').textContent=plots.filter(p=>!['Complete','Measured'].includes(p.status)).length;
   }
 
+  function updateProgress() {
+    const total=plots.length;
+    const complete=plots.filter(p=>p.status==='Complete').length;
+    const pct=total===0?0:Math.round((complete/total)*100);
+    document.getElementById('progress-pct').textContent=pct+'%';
+    document.getElementById('progress-bar').style.width=pct+'%';
+    const dev=developers.find(d=>d.id===currentDevId);
+    const site=sites.find(s=>s.id===currentSiteId);
+    document.getElementById('progress-label').textContent=`${site?.name||'Site'} Progress — ${dev?.name||''}`;
+    // Breakdown
+    const breakdown=STATUSES.map(s=>({ s, count:plots.filter(p=>p.status===s).length })).filter(x=>x.count>0);
+    document.getElementById('progress-breakdown').innerHTML=breakdown.map(x=>
+      `<span class="progress-item"><span class="progress-dot" style="background:${STATUS_COLORS[x.s]||'#999'}"></span>${x.s}: ${x.count}</span>`
+    ).join('');
+  }
+
+  function updateUpcoming() {
+    const today=new Date(); today.setHours(0,0,0,0);
+    const next7=new Date(today); next7.setDate(next7.getDate()+7);
+    const upcoming=plots.filter(p=>p.install_date&&p.status!=='Complete').filter(p=>{
+      const d=new Date(p.install_date);
+      return d>=today&&d<=next7;
+    }).sort((a,b)=>new Date(a.install_date)-new Date(b.install_date));
+    const bar=document.getElementById('upcoming-bar');
+    if (upcoming.length===0) { bar.classList.remove('show'); return; }
+    bar.classList.add('show');
+    document.getElementById('upcoming-list').innerHTML=upcoming.map(p=>
+      `<span class="upcoming-chip">Plot ${esc(p.number)} — ${fmtDate(p.install_date)}</span>`
+    ).join('');
+  }
+
   function buildPills() {
     document.getElementById('pills').innerHTML=
       `<button class="pill ${!filterStatus?'active':''}" onclick="setFilter('')">All</button>`+
@@ -525,110 +815,52 @@
   }
   function setFilter(s) { filterStatus=s; renderPlots(); }
 
-  // ── Add single plot ──────────────────────────────────────
+  // ── Add Plot ─────────────────────────────────────────────
   async function addPlot() {
     const number=document.getElementById('inp-number').value.trim();
+    const product=document.getElementById('inp-product').value;
+    const installDate=document.getElementById('inp-install-date').value||null;
     if (!number) { showToast('Enter a plot number',true); return; }
-    if (!currentSiteId) { showToast('Select a site first',true); return; }
     if (plots.find(p=>p.number.toLowerCase()===number.toLowerCase())) { showToast('Plot '+number+' already exists',true); return; }
     const btn=document.querySelector('.btn-add'); btn.disabled=true;
     const userLabel=currentUser.user_metadata?.full_name||currentUser.email;
-    const { data,error } = await sb.from('plots').insert({ site_id:currentSiteId,number,status:'Measured',notes:'',updated_by:userLabel }).select().single();
+    const { data,error } = await sb.from('plots').insert({
+      site_id:currentSiteId, number, status:'Measured', notes:'',
+      product_type:product, install_date:installDate, updated_by:userLabel
+    }).select().single();
     btn.disabled=false;
     if (error) { showToast('Error: '+error.message,true); return; }
-    plots.push(data); document.getElementById('inp-number').value='';
-    renderPlots(); await logAction(data.id,'Plot created'); showToast('Plot '+number+' added');
+    plots.push(data);
+    document.getElementById('inp-number').value='';
+    document.getElementById('inp-product').value='';
+    document.getElementById('inp-install-date').value='';
+    renderPlots(); updateProgress(); updateUpcoming();
+    await logAction(data.id,'Plot created'+(product?' — '+product:'')+(installDate?' — install: '+installDate:''));
+    showToast('Plot '+number+' added');
   }
 
-  // ── CSV Import ───────────────────────────────────────────
-  function downloadCSVTemplate() {
-    const csv = 'plot_number\n1\n2\n3\n4\n5';
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
-    a.download = 'plot_tracker_template.csv';
-    a.click();
+  // ── Edit Plot (product + date) ────────────────────────────
+  function openEditModal(id) {
+    if (!isAdmin()) return;
+    currentEditPlotId=id;
+    const p=plots.find(x=>x.id===id);
+    document.getElementById('edit-plot-title').textContent=`Plot ${p.number} — edit product and date`;
+    document.getElementById('edit-product').value=p.product_type||'';
+    document.getElementById('edit-install-date').value=p.install_date||'';
+    document.getElementById('modal-edit').classList.add('open');
   }
 
-  function handleCSVUpload(input) {
-    const file = input.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = e => {
-      const text = e.target.result;
-      parseCSV(text);
-    };
-    reader.readAsText(file);
-    input.value = ''; // reset so same file can be re-uploaded
-  }
-
-  function parseCSV(text) {
-    const lines = text.split('\n').map(l=>l.trim()).filter(l=>l);
-    if (lines.length === 0) { showToast('CSV file is empty',true); return; }
-
-    // Detect header
-    const firstLine = lines[0].toLowerCase().replace(/['"]/g,'');
-    const hasHeader = firstLine.includes('plot') || firstLine.includes('number') || isNaN(firstLine.split(',')[0]);
-    const dataLines = hasHeader ? lines.slice(1) : lines;
-
-    csvPendingRows = [];
-    const preview = [];
-    const existingNumbers = new Set(plots.map(p=>p.number.toLowerCase()));
-
-    dataLines.forEach(line => {
-      if (!line) return;
-      // Take first column
-      const number = line.split(',')[0].replace(/['"]/g,'').trim();
-      if (!number) return;
-      if (existingNumbers.has(number.toLowerCase())) {
-        preview.push({ number, skip: true, reason: 'already exists' });
-      } else {
-        csvPendingRows.push(number);
-        existingNumbers.add(number.toLowerCase());
-        preview.push({ number, skip: false });
-      }
-    });
-
-    if (csvPendingRows.length === 0 && preview.length === 0) {
-      showToast('No valid plot numbers found in CSV',true); return;
-    }
-
-    // Show modal
-    const summary = document.getElementById('csv-summary');
-    summary.textContent = `Found ${preview.length} rows — ${csvPendingRows.length} will be imported, ${preview.length - csvPendingRows.length} skipped.`;
-    document.getElementById('csv-preview').innerHTML = preview.slice(0,50).map(r=>
-      `<div class="csv-row ${r.skip?'csv-skip':'csv-ok'}">Plot ${r.number}${r.skip?' — skipped ('+r.reason+')':' — will import'}</div>`
-    ).join('') + (preview.length > 50 ? `<div class="csv-row" style="color:var(--muted)">…and ${preview.length-50} more</div>` : '');
-    document.getElementById('btn-csv-confirm').textContent = `Import ${csvPendingRows.length} Plot${csvPendingRows.length!==1?'s':''}`;
-    document.getElementById('modal-csv').classList.add('open');
-  }
-
-  async function confirmCSVImport() {
-    if (!csvPendingRows.length) { closeModals(); return; }
-    const btn = document.getElementById('btn-csv-confirm');
-    btn.disabled=true; btn.textContent='Importing…';
+  async function saveEditPlot() {
+    const product=document.getElementById('edit-product').value;
+    const installDate=document.getElementById('edit-install-date').value||null;
     const userLabel=currentUser.user_metadata?.full_name||currentUser.email;
-
-    const toInsert = csvPendingRows.map(number => ({
-      site_id:currentSiteId, number, status:'Measured', notes:'', updated_by:userLabel
-    }));
-
-    const { data, error } = await sb.from('plots').insert(toInsert).select();
-    btn.disabled=false;
-
-    if (error) { showToast('Import error: '+error.message,true); return; }
-
-    const newPlots = data||[];
-    plots.push(...newPlots);
-    // Log bulk import
-    await sb.from('audit_log').insert({
-      plot_id:null, site_id:currentSiteId, user_email:userLabel,
-      action:`Bulk CSV import: ${newPlots.length} plots added`
-    });
-
-    closeModals();
-    renderPlots();
-    showToast(`${newPlots.length} plots imported successfully`);
-    csvPendingRows = [];
+    const { error } = await sb.from('plots').update({ product_type:product, install_date:installDate, updated_at:new Date().toISOString(), updated_by:userLabel }).eq('id',currentEditPlotId);
+    if (error) { showToast('Error saving',true); return; }
+    const p=plots.find(x=>x.id===currentEditPlotId);
+    p.product_type=product; p.install_date=installDate; p.updated_by=userLabel;
+    closeModals(); renderPlots(); updateUpcoming();
+    await logAction(currentEditPlotId,`Product/date updated: ${product||'—'}, install: ${installDate||'—'}`);
+    showToast('Plot updated');
   }
 
   // ── Status / Notes ───────────────────────────────────────
@@ -640,11 +872,10 @@
     p.status=status; p.updated_at=new Date().toISOString(); p.updated_by=userLabel;
     document.getElementById('badge-'+id).textContent=status;
     document.getElementById('badge-'+id).className=badgeClass(status);
-    const updEl=document.getElementById('updated-'+id);
-    if (updEl) updEl.innerHTML=new Date().toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})+`<div class="updated-by">${esc(userLabel)}</div>`;
-    updateStats();
+    updateStats(); updateProgress();
     await logAction(id,`Status changed: ${prev} → ${status}`);
     showToast('Status → '+status);
+    renderPlots();
   }
 
   function editNotes(id) {
@@ -658,74 +889,155 @@
     const userLabel=currentUser.user_metadata?.full_name||currentUser.email;
     const { error } = await sb.from('plots').update({ notes,updated_at:new Date().toISOString(),updated_by:userLabel }).eq('id',id);
     if (error) { showToast('Error saving notes',true); return; }
-    const p=plots.find(x=>x.id===id); p.notes=notes; p.updated_at=new Date().toISOString(); p.updated_by=userLabel;
+    const p=plots.find(x=>x.id===id); p.notes=notes;
     inp.style.display='none';
     const view=document.getElementById('notes-view-'+id);
     view.textContent=notes||'Click to add notes…';
     view.className='notes-view '+(notes?'has-note':'');
     view.style.display='block';
-    await logAction(id,`Notes updated: "${notes.slice(0,60)}${notes.length>60?'…':''}"`);
+    await logAction(id,`Notes updated`);
     showToast('Notes saved');
+  }
+
+  // ── Snagging Sign-Off ────────────────────────────────────
+  function openSnagModal(id, number) {
+    currentSnagPlotId=id;
+    const p=plots.find(x=>x.id===id);
+    document.getElementById('snag-plot-title').textContent=`Plot ${number} — snagging details`;
+    document.getElementById('snag-category').value=p.defect_category||'';
+    document.getElementById('snag-notes').value=p.notes||'';
+    const resolvedInfo=document.getElementById('snag-resolved-info');
+    const signoffBtn=document.getElementById('snag-signoff-btn');
+    if (p.snag_resolved_at) {
+      resolvedInfo.style.display='block';
+      document.getElementById('snag-resolved-by-text').textContent=`Resolved by ${p.snag_resolved_by} on ${fmtDate(p.snag_resolved_at)}`;
+      signoffBtn.textContent='Update Resolution';
+    } else {
+      resolvedInfo.style.display='none';
+      signoffBtn.textContent='✓ Mark Resolved';
+    }
+    document.getElementById('modal-snag').classList.add('open');
+  }
+
+  async function signOffSnag() {
+    const category=document.getElementById('snag-category').value;
+    const notes=document.getElementById('snag-notes').value;
+    const userLabel=currentUser.user_metadata?.full_name||currentUser.email;
+    const now=new Date().toISOString();
+    const { error } = await sb.from('plots').update({
+      defect_category:category, notes, snag_resolved_at:now, snag_resolved_by:userLabel,
+      updated_at:now, updated_by:userLabel
+    }).eq('id',currentSnagPlotId);
+    if (error) { showToast('Error saving',true); return; }
+    const p=plots.find(x=>x.id===currentSnagPlotId);
+    p.defect_category=category; p.notes=notes; p.snag_resolved_at=now; p.snag_resolved_by=userLabel;
+    closeModals(); renderPlots();
+    await logAction(currentSnagPlotId,`Snagging signed off — ${category||'No category'}`);
+    showToast('Snag marked as resolved');
+  }
+
+  // ── Deliveries ───────────────────────────────────────────
+  async function openDeliveryModal(plotId, plotNumber) {
+    currentDeliveryPlotId=plotId;
+    document.getElementById('delivery-plot-title').textContent=`Plot ${plotNumber} — delivery tracking`;
+    document.getElementById('delivery-list').innerHTML='';
+    document.getElementById('delivery-loading').style.display='block';
+    document.getElementById('modal-delivery').classList.add('open');
+    await loadDeliveries(plotId);
+  }
+
+  async function loadDeliveries(plotId) {
+    const { data } = await sb.from('deliveries').select('*').eq('plot_id',plotId).order('created_at');
+    document.getElementById('delivery-loading').style.display='none';
+    const list=document.getElementById('delivery-list');
+    if (!data||data.length===0) { list.innerHTML='<p style="font-size:13px;color:var(--muted);padding:8px 0">No deliveries tracked yet.</p>'; return; }
+    list.innerHTML=data.map(d=>`
+      <div class="delivery-item" id="del-item-${d.id}">
+        <div class="delivery-info">
+          <div class="delivery-item-name">${esc(d.item)}</div>
+          <div class="delivery-meta">Expected: ${fmtDate(d.expected_date)}${d.notes?` · ${esc(d.notes)}`:''}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <select class="delivery-status-badge ds-${d.status.replace(' ','-')}" onchange="updateDeliveryStatus('${d.id}',this.value)" style="border:none;background:transparent;cursor:pointer;font-size:11px;font-weight:600;">
+            ${['Pending','On Order','Arrived','Delayed'].map(s=>`<option value="${s}" ${d.status===s?'selected':''}>${s}</option>`).join('')}
+          </select>
+          <button class="btn-del-delivery" onclick="deleteDelivery('${d.id}')">✕</button>
+        </div>
+      </div>`).join('');
+  }
+
+  async function addDelivery() {
+    const item=document.getElementById('del-item').value.trim();
+    if (!item) { showToast('Enter an item description',true); return; }
+    const expected=document.getElementById('del-expected').value||null;
+    const status=document.getElementById('del-status').value;
+    const notes=document.getElementById('del-notes').value.trim();
+    const userLabel=currentUser.user_metadata?.full_name||currentUser.email;
+    const { error } = await sb.from('deliveries').insert({
+      plot_id:currentDeliveryPlotId, site_id:currentSiteId,
+      item, expected_date:expected, status, notes, created_by:userLabel
+    });
+    if (error) { showToast('Error: '+error.message,true); return; }
+    document.getElementById('del-item').value='';
+    document.getElementById('del-expected').value='';
+    document.getElementById('del-notes').value='';
+    document.getElementById('del-status').value='Pending';
+    await loadDeliveries(currentDeliveryPlotId);
+    await logAction(currentDeliveryPlotId,`Delivery added: ${item} [${status}]`);
+    showToast('Delivery item added');
+  }
+
+  async function updateDeliveryStatus(delId, status) {
+    await sb.from('deliveries').update({ status, updated_at:new Date().toISOString() }).eq('id',delId);
+    showToast('Delivery status updated');
+  }
+
+  async function deleteDelivery(delId) {
+    if (!confirm('Remove this delivery item?')) return;
+    await sb.from('deliveries').delete().eq('id',delId);
+    document.getElementById('del-item-'+delId)?.remove();
+    showToast('Delivery removed');
   }
 
   // ── Photos ───────────────────────────────────────────────
   async function openPhotoModal(plotId, plotNumber) {
-    currentPhotoPlotId = plotId;
-    document.getElementById('photo-modal-title').textContent = `Photos — Plot ${plotNumber}`;
-    document.getElementById('photo-grid').innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">Loading photos…</div>';
+    currentPhotoPlotId=plotId;
+    document.getElementById('photo-modal-title').textContent=`Photos — Plot ${plotNumber}`;
+    document.getElementById('photo-grid').innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px 0">Loading…</div>';
     document.getElementById('modal-photos').classList.add('open');
     await loadPhotos(plotId);
   }
 
   async function loadPhotos(plotId) {
-    const { data, error } = await sb.from('snagging_photos').select('*').eq('plot_id', plotId).order('created_at');
-    const grid = document.getElementById('photo-grid');
-    if (error || !data || data.length === 0) {
-      grid.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">No photos yet. Upload below.</div>';
-      return;
-    }
-    grid.innerHTML = data.map(photo => {
-      const { data: urlData } = sb.storage.from('snagging-photos').getPublicUrl(photo.storage_path);
-      // Use signed URL instead for private bucket
-      return `<div class="photo-item" id="photo-item-${photo.id}">
-        <img src="" data-path="${photo.storage_path}" data-id="${photo.id}" onclick="viewFullPhoto('${photo.storage_path}')" title="${esc(photo.file_name)}" class="photo-thumb-grid"/>
+    const { data } = await sb.from('snagging_photos').select('*').eq('plot_id',plotId).order('created_at');
+    const grid=document.getElementById('photo-grid');
+    if (!data||data.length===0) { grid.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px 0">No photos yet.</div>'; return; }
+    grid.innerHTML=data.map(photo=>`
+      <div class="photo-item" id="photo-item-${photo.id}">
+        <img src="" data-path="${photo.storage_path}" data-id="${photo.id}" onclick="viewFullPhoto('${photo.storage_path}')" title="${esc(photo.file_name)}"/>
         <div class="photo-name">${esc(photo.file_name)}</div>
-        <button class="btn-del-photo" onclick="deletePhoto('${photo.id}','${photo.storage_path}')" title="Delete">✕</button>
-      </div>`;
-    }).join('');
-
-    // Load signed URLs for private bucket
+        <button class="btn-del-photo" onclick="deletePhoto('${photo.id}','${photo.storage_path}')">✕</button>
+      </div>`).join('');
     for (const photo of data) {
-      const { data: signedData } = await sb.storage.from('snagging-photos').createSignedUrl(photo.storage_path, 3600);
-      if (signedData?.signedUrl) {
-        const img = grid.querySelector(`[data-id="${photo.id}"]`);
-        if (img) img.src = signedData.signedUrl;
-      }
+      const { data:sd } = await sb.storage.from('snagging-photos').createSignedUrl(photo.storage_path,3600);
+      if (sd?.signedUrl) { const img=grid.querySelector(`[data-id="${photo.id}"]`); if (img) img.src=sd.signedUrl; }
     }
   }
 
   async function uploadPhotos(input) {
-    const files = Array.from(input.files);
-    if (!files.length || !currentPhotoPlotId) return;
-    const userLabel = currentUser.user_metadata?.full_name||currentUser.email;
-    showToast('Uploading ' + files.length + ' photo' + (files.length>1?'s':'') + '…');
-
+    const files=Array.from(input.files);
+    if (!files.length||!currentPhotoPlotId) return;
+    const userLabel=currentUser.user_metadata?.full_name||currentUser.email;
+    showToast('Uploading…');
     for (const file of files) {
-      const ext = file.name.split('.').pop();
-      const path = `${currentSiteId}/${currentPhotoPlotId}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error: uploadError } = await sb.storage.from('snagging-photos').upload(path, file);
-      if (uploadError) { showToast('Upload failed: '+uploadError.message, true); continue; }
-      await sb.from('snagging_photos').insert({
-        plot_id: currentPhotoPlotId,
-        site_id: currentSiteId,
-        storage_path: path,
-        file_name: file.name,
-        uploaded_by: userLabel
-      });
-      await logAction(currentPhotoPlotId, `Snagging photo uploaded: ${file.name}`);
-      photoCounts[currentPhotoPlotId] = (photoCounts[currentPhotoPlotId]||0) + 1;
+      const ext=file.name.split('.').pop();
+      const path=`${currentSiteId}/${currentPhotoPlotId}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await sb.storage.from('snagging-photos').upload(path,file);
+      if (error) { showToast('Upload failed: '+error.message,true); continue; }
+      await sb.from('snagging_photos').insert({ plot_id:currentPhotoPlotId, site_id:currentSiteId, storage_path:path, file_name:file.name, uploaded_by:userLabel });
+      await logAction(currentPhotoPlotId,`Photo uploaded: ${file.name}`);
+      photoCounts[currentPhotoPlotId]=(photoCounts[currentPhotoPlotId]||0)+1;
     }
-
     input.value='';
     await loadPhotos(currentPhotoPlotId);
     renderPlots();
@@ -735,32 +1047,30 @@
   async function deletePhoto(photoId, storagePath) {
     if (!confirm('Delete this photo?')) return;
     await sb.storage.from('snagging-photos').remove([storagePath]);
-    await sb.from('snagging_photos').delete().eq('id', photoId);
-    photoCounts[currentPhotoPlotId] = Math.max(0, (photoCounts[currentPhotoPlotId]||1) - 1);
+    await sb.from('snagging_photos').delete().eq('id',photoId);
+    photoCounts[currentPhotoPlotId]=Math.max(0,(photoCounts[currentPhotoPlotId]||1)-1);
     document.getElementById('photo-item-'+photoId)?.remove();
     renderPlots();
     showToast('Photo deleted');
   }
 
-  async function viewFullPhoto(storagePath) {
-    const { data } = await sb.storage.from('snagging-photos').createSignedUrl(storagePath, 3600);
-    if (data?.signedUrl) window.open(data.signedUrl, '_blank');
+  async function viewFullPhoto(path) {
+    const { data } = await sb.storage.from('snagging-photos').createSignedUrl(path,3600);
+    if (data?.signedUrl) window.open(data.signedUrl,'_blank');
   }
 
-  // ── Delete plot ──────────────────────────────────────────
+  // ── Delete Plot ──────────────────────────────────────────
   function askDelete(id) { pendingDeleteId=id; document.getElementById('modal-delete').classList.add('open'); }
 
   async function confirmDelete() {
     if (!pendingDeleteId) return;
     const p=plots.find(x=>x.id===pendingDeleteId);
-    // Delete photos from storage
-    const { data: photos } = await sb.from('snagging_photos').select('storage_path').eq('plot_id',pendingDeleteId);
-    if (photos?.length) {
-      await sb.storage.from('snagging-photos').remove(photos.map(p=>p.storage_path));
-    }
+    const { data:photos } = await sb.from('snagging_photos').select('storage_path').eq('plot_id',pendingDeleteId);
+    if (photos?.length) await sb.storage.from('snagging-photos').remove(photos.map(p=>p.storage_path));
     await sb.from('plots').delete().eq('id',pendingDeleteId);
     plots=plots.filter(x=>x.id!==pendingDeleteId);
-    closeModals(); renderPlots(); showToast('Plot '+(p?.number||'')+' removed');
+    closeModals(); renderPlots(); updateProgress();
+    showToast('Plot '+(p?.number||'')+' removed');
   }
 
   // ── Add Developer / Site ─────────────────────────────────
@@ -778,7 +1088,6 @@
   }
 
   function showAddSite() {
-    if (!currentDevId) return;
     const dev=developers.find(d=>d.id===currentDevId);
     document.getElementById('modal-site-sub').textContent=`Add a new site under ${dev?.name||'this developer'}.`;
     document.getElementById('inp-site-name').value='';
@@ -796,14 +1105,68 @@
     sel.value=data.id; closeModals(); await onSiteChange(); showToast(name+' added');
   }
 
+  // ── CSV Import ───────────────────────────────────────────
+  function downloadCSVTemplate() {
+    const csv='plot_number\n1\n2\n3\n4\n5';
+    const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+    a.download='plot_tracker_template.csv'; a.click();
+  }
+
+  function handleCSVUpload(input) {
+    const file=input.files[0]; if (!file) return;
+    const reader=new FileReader();
+    reader.onload=e=>parseCSV(e.target.result);
+    reader.readAsText(file); input.value='';
+  }
+
+  function parseCSV(text) {
+    const lines=text.split('\n').map(l=>l.trim()).filter(l=>l);
+    if (!lines.length) { showToast('CSV is empty',true); return; }
+    const first=lines[0].toLowerCase().replace(/['"]/g,'');
+    const hasHeader=first.includes('plot')||first.includes('number')||isNaN(first.split(',')[0]);
+    const dataLines=hasHeader?lines.slice(1):lines;
+    csvPendingRows=[]; const preview=[];
+    const existing=new Set(plots.map(p=>p.number.toLowerCase()));
+    dataLines.forEach(line=>{
+      const number=line.split(',')[0].replace(/['"]/g,'').trim();
+      if (!number) return;
+      if (existing.has(number.toLowerCase())) { preview.push({number,skip:true,reason:'already exists'}); }
+      else { csvPendingRows.push(number); existing.add(number.toLowerCase()); preview.push({number,skip:false}); }
+    });
+    if (!preview.length) { showToast('No valid plot numbers found',true); return; }
+    document.getElementById('csv-summary').textContent=`Found ${preview.length} rows — ${csvPendingRows.length} to import, ${preview.length-csvPendingRows.length} skipped.`;
+    document.getElementById('csv-preview').innerHTML=preview.slice(0,50).map(r=>
+      `<div class="csv-row ${r.skip?'csv-skip':'csv-ok'}">Plot ${r.number}${r.skip?' — skipped':' — will import'}</div>`
+    ).join('')+(preview.length>50?`<div class="csv-row" style="color:var(--muted)">…and ${preview.length-50} more</div>`:'');
+    document.getElementById('btn-csv-confirm').textContent=`Import ${csvPendingRows.length} Plot${csvPendingRows.length!==1?'s':''}`;
+    document.getElementById('modal-csv').classList.add('open');
+  }
+
+  async function confirmCSVImport() {
+    if (!csvPendingRows.length) { closeModals(); return; }
+    const btn=document.getElementById('btn-csv-confirm');
+    btn.disabled=true; btn.textContent='Importing…';
+    const userLabel=currentUser.user_metadata?.full_name||currentUser.email;
+    const toInsert=csvPendingRows.map(number=>({ site_id:currentSiteId,number,status:'Measured',notes:'',product_type:'',updated_by:userLabel }));
+    const { data,error } = await sb.from('plots').insert(toInsert).select();
+    btn.disabled=false;
+    if (error) { showToast('Import error: '+error.message,true); return; }
+    plots.push(...(data||[]));
+    await sb.from('audit_log').insert({ plot_id:null,site_id:currentSiteId,user_email:userLabel,action:`Bulk CSV import: ${(data||[]).length} plots added` });
+    closeModals(); renderPlots(); updateProgress();
+    showToast(`${(data||[]).length} plots imported`);
+    csvPendingRows=[];
+  }
+
   // ── Export CSV ───────────────────────────────────────────
   function exportCSV() {
     if (!plots.length) { showToast('No plots to export',true); return; }
     const dev=developers.find(d=>d.id===currentDevId);
     const site=sites.find(s=>s.id===currentSiteId);
-    const headers=['Plot Number','Developer','Site','Status','Notes','Photos','Last Updated','Updated By'];
+    const headers=['Plot Number','Product Type','Status','Install Date','Defect Category','Resolved','Notes','Photos','Last Updated','Updated By'];
     const rows=[...plots].sort((a,b)=>a.number.padStart(10,'0').localeCompare(b.number.padStart(10,'0'))).map(p=>[
-      p.number, dev?.name||'', site?.name||'', p.status, p.notes, photoCounts[p.id]||0,
+      p.number, p.product_type||'', p.status, p.install_date||'', p.defect_category||'',
+      p.snag_resolved_at?fmtDate(p.snag_resolved_at):'', p.notes, photoCounts[p.id]||0,
       p.updated_at?new Date(p.updated_at).toLocaleString('en-GB'):'', p.updated_by||''
     ].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(','));
     const csv=[headers.join(','),...rows].join('\n');
@@ -813,19 +1176,18 @@
   }
 
   // ── Audit log ────────────────────────────────────────────
-  async function logAction(plotId, action) {
+  async function logAction(plotId,action) {
     const userLabel=currentUser.user_metadata?.full_name||currentUser.email;
-    await sb.from('audit_log').insert({ plot_id:plotId, site_id:currentSiteId, user_email:userLabel, action });
+    await sb.from('audit_log').insert({ plot_id:plotId,site_id:currentSiteId,user_email:userLabel,action });
   }
 
   // ── Modals ───────────────────────────────────────────────
   function closeModals() {
     document.querySelectorAll('.modal-overlay').forEach(m=>m.classList.remove('open'));
-    pendingDeleteId=null; currentPhotoPlotId=null;
+    pendingDeleteId=null; currentPhotoPlotId=null; currentSnagPlotId=null;
+    currentDeliveryPlotId=null; currentEditPlotId=null;
   }
-  document.querySelectorAll('.modal-overlay').forEach(m=>{
-    m.addEventListener('click',e=>{ if (e.target===m) closeModals(); });
-  });
+  document.querySelectorAll('.modal-overlay').forEach(m=>{ m.addEventListener('click',e=>{ if (e.target===m) closeModals(); }); });
 
   // ── Toast ────────────────────────────────────────────────
   let toastTimer;
