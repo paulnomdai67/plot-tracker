@@ -548,7 +548,8 @@
     currentUser = session.user;
     const name = currentUser.user_metadata?.full_name || currentUser.email;
     document.getElementById('user-chip').textContent = name;
-    const { data:roleData } = await sb.from('user_roles').select('role').eq('user_id',currentUser.id).single().catch(()=>({data:null}));
+    let roleData = null;
+    try { const res = await sb.from('user_roles').select('role').eq('user_id',currentUser.id).single(); roleData = res.data; } catch(e) {}
     userRole = roleData?.role || 'standard';
     const badge = document.getElementById('role-badge');
     badge.textContent = userRole==='admin'?'Admin':'Standard';
