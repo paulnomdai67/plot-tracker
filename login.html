@@ -82,7 +82,10 @@
   const { createClient } = supabase;
   const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  sb.auth.getSession().then(({ data }) => { if (data.session) window.location.href='index.html'; });
+  sb.auth.getSession().then(({ data }) => { if (data.session) redirect(); });
+  sb.auth.onAuthStateChange((event, session) => { if (event === 'SIGNED_IN' && session) redirect(); });
+
+  function redirect() { window.location.replace('index.html'); }
 
   function showError(msg) { const el=document.getElementById('error-msg'); el.textContent=msg; el.classList.add('show'); document.getElementById('success-msg').classList.remove('show'); }
   function showSuccess(msg) { const el=document.getElementById('success-msg'); el.textContent=msg; el.classList.add('show'); document.getElementById('error-msg').classList.remove('show'); }
@@ -90,52 +93,67 @@
   function showRegister() { clearMsgs(); document.getElementById('login-form').style.display='none'; document.getElementById('register-form').style.display='block'; }
   function showLogin() { clearMsgs(); document.getElementById('register-form').style.display='none'; document.getElementById('login-form').style.display='block'; }
 
-  async function logEvent(user, action) {
+  async function writeLog(user, action) {
+    // Write directly to audit_log using the authenticated session
     const name = user.user_metadata?.full_name || user.email;
-    await sb.from('audit_log').insert({ plot_id:null, site_id:null, user_email:name, action }).catch(()=>{});
+    try {
+      await sb.from('audit_log').insert({ plot_id: null, site_id: null, user_email: name, action });
+    } catch(e) { console.warn('Log write failed:', e); }
   }
 
   async function ensureRole(user) {
-    const { data } = await sb.from('user_roles').select('role').eq('user_id', user.id).single();
-    if (!data) {
-      await sb.from('user_roles').insert({ user_id:user.id, role:'standard' }).catch(()=>{});
-    }
+    try {
+      const { data } = await sb.from('user_roles').select('role').eq('user_id', user.id).single();
+      if (!data) await sb.from('user_roles').insert({ user_id: user.id, role: 'standard' });
+    } catch(e) {}
   }
 
   async function signIn() {
-    const email=document.getElementById('login-email').value.trim();
-    const password=document.getElementById('login-password').value;
-    if (!email||!password) { showError('Please enter your email and password.'); return; }
-    const btn=document.getElementById('login-btn');
-    btn.disabled=true; btn.textContent='Signing in…';
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    if (!email || !password) { showError('Please enter your email and password.'); return; }
+    const btn = document.getElementById('login-btn');
+    btn.disabled = true; btn.textContent = 'Signing in…';
     const { data, error } = await sb.auth.signInWithPassword({ email, password });
-    if (error) { showError(error.message); btn.disabled=false; btn.textContent='Sign In'; }
-    else { await ensureRole(data.user); await logEvent(data.user,'Signed in'); window.location.href='index.html'; }
+    if (error) {
+      showError(error.message);
+      btn.disabled = false; btn.textContent = 'Sign In';
+    } else {
+      // Must write log AFTER sign in so RLS allows the insert
+      await ensureRole(data.user);
+      await writeLog(data.user, 'Signed in');
+      showSuccess('Signed in! Loading…');
+      setTimeout(() => redirect(), 1000);
+    }
   }
 
   async function register() {
-    const name=document.getElementById('reg-name').value.trim();
-    const email=document.getElementById('reg-email').value.trim();
-    const password=document.getElementById('reg-password').value;
-    if (!name||!email||!password) { showError('Please fill in all fields.'); return; }
-    if (password.length<6) { showError('Password must be at least 6 characters.'); return; }
-    const btn=document.getElementById('reg-btn');
-    btn.disabled=true; btn.textContent='Creating account…';
-    const { error } = await sb.auth.signUp({ email, password, options:{ data:{ full_name:name } } });
-    if (error) { showError(error.message); btn.disabled=false; btn.textContent='Create Account'; }
-    else {
+    const name = document.getElementById('reg-name').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    const password = document.getElementById('reg-password').value;
+    if (!name || !email || !password) { showError('Please fill in all fields.'); return; }
+    if (password.length < 6) { showError('Password must be at least 6 characters.'); return; }
+    const btn = document.getElementById('reg-btn');
+    btn.disabled = true; btn.textContent = 'Creating account…';
+    const { error } = await sb.auth.signUp({ email, password, options: { data: { full_name: name } } });
+    if (error) {
+      showError(error.message); btn.disabled = false; btn.textContent = 'Create Account';
+    } else {
       showSuccess('Account created! Signing you in…');
-      setTimeout(async () => {
-        const { data:d, error:e } = await sb.auth.signInWithPassword({ email, password });
-        if (!e) { await ensureRole(d.user); await logEvent(d.user,'Account created and signed in'); window.location.href='index.html'; }
-        else { btn.disabled=false; btn.textContent='Create Account'; showLogin(); }
-      }, 1000);
+      const { data: d, error: e } = await sb.auth.signInWithPassword({ email, password });
+      if (!e && d) {
+        await ensureRole(d.user);
+        await writeLog(d.user, 'Account created and signed in');
+        setTimeout(() => redirect(), 1000);
+      } else {
+        btn.disabled = false; btn.textContent = 'Create Account'; showLogin();
+      }
     }
   }
 
   document.addEventListener('keydown', e => {
-    if (e.key!=='Enter') return;
-    if (document.getElementById('register-form').style.display!=='none') register(); else signIn();
+    if (e.key !== 'Enter') return;
+    if (document.getElementById('register-form').style.display !== 'none') register(); else signIn();
   });
 </script>
 </body>
