@@ -163,12 +163,11 @@
     .plot-num { font-family:'DM Mono',monospace; font-weight:500; font-size:13px; }
     .badge { display:inline-flex; align-items:center; gap:4px; padding:3px 8px; border-radius:5px; font-size:11px; font-weight:600; width:fit-content; white-space:nowrap; }
     .badge::before { content:''; width:5px; height:5px; border-radius:50%; background:currentColor; flex-shrink:0; }
-    .badge-Measured      { background:var(--measured-bg);    color:var(--measured); }
-    .badge-In-Production { background:var(--production-bg);  color:var(--production); }
-    .badge-Ready         { background:var(--ready-bg);       color:var(--ready); }
-    .badge-Installed     { background:var(--installed-bg);   color:var(--installed); }
+    .badge-Manufactured  { background:var(--measured-bg);    color:var(--measured); }
+    .badge-Delivered     { background:var(--ready-bg);       color:var(--ready); }
+    .badge-Part-Install  { background:var(--production-bg);  color:var(--production); }
+    .badge-Full-Install  { background:var(--installed-bg);   color:var(--installed); }
     .badge-Snagging      { background:var(--snagging-bg);    color:var(--snagging); }
-    .badge-Complete      { background:var(--complete-bg);    color:var(--complete); }
     .status-select { background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:6px; padding:5px 7px; font-size:12px; font-family:'DM Sans',sans-serif; cursor:pointer; outline:none; width:138px; margin-bottom:4px; }
     .status-select:focus { border-color:var(--accent); }
     .product-cell { font-size:11px; color:var(--muted); max-width:130px; cursor:pointer; }
@@ -329,7 +328,7 @@
 
     <div class="stats">
       <div class="stat-card"><div class="stat-label">Total</div><div class="stat-value" id="stat-total">0</div></div>
-      <div class="stat-card s-complete"><div class="stat-label">Complete</div><div class="stat-value" id="stat-complete">0</div></div>
+      <div class="stat-card s-complete"><div class="stat-label">Full Install</div><div class="stat-value" id="stat-complete">0</div></div>
       <div class="stat-card s-progress"><div class="stat-label">In Progress</div><div class="stat-value" id="stat-progress">0</div></div>
       <div class="stat-card s-snagging"><div class="stat-label">Snagging</div><div class="stat-value" id="stat-snagging">0</div></div>
     </div>
@@ -504,6 +503,45 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-part-install">
+  <div class="modal">
+    <h2>Part Install — What's Missing?</h2>
+    <p class="modal-sub" id="part-install-plot-title">Select all items not yet installed.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;" id="missing-checkboxes">
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;background:var(--bg);border:1px solid var(--border);padding:7px 12px;border-radius:7px;">
+        <input type="checkbox" value="Front Door" style="width:auto;margin:0"/> Front Door
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;background:var(--bg);border:1px solid var(--border);padding:7px 12px;border-radius:7px;">
+        <input type="checkbox" value="Back Door" style="width:auto;margin:0"/> Back Door
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;background:var(--bg);border:1px solid var(--border);padding:7px 12px;border-radius:7px;">
+        <input type="checkbox" value="Bay Window" style="width:auto;margin:0"/> Bay Window
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;background:var(--bg);border:1px solid var(--border);padding:7px 12px;border-radius:7px;">
+        <input type="checkbox" value="Bedroom Windows" style="width:auto;margin:0"/> Bedroom Windows
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;background:var(--bg);border:1px solid var(--border);padding:7px 12px;border-radius:7px;">
+        <input type="checkbox" value="Living Room Window" style="width:auto;margin:0"/> Living Room Window
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;background:var(--bg);border:1px solid var(--border);padding:7px 12px;border-radius:7px;">
+        <input type="checkbox" value="Bathroom Window" style="width:auto;margin:0"/> Bathroom Window
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;background:var(--bg);border:1px solid var(--border);padding:7px 12px;border-radius:7px;">
+        <input type="checkbox" value="Patio Door" style="width:auto;margin:0"/> Patio Door
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;background:var(--bg);border:1px solid var(--border);padding:7px 12px;border-radius:7px;">
+        <input type="checkbox" value="Bifold Door" style="width:auto;margin:0"/> Bifold Door
+      </label>
+    </div>
+    <label style="margin-top:14px;">Other (describe manually)</label>
+    <input type="text" id="part-install-other" placeholder="e.g. Kitchen window, garage door…"/>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="cancelPartInstall()">Cancel</button>
+      <button class="btn-confirm" onclick="confirmPartInstall()">Save & Update Status</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
@@ -512,8 +550,8 @@
   const { createClient } = supabase;
   const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  const STATUSES = ["Measured","In Production","Ready","Installed","Snagging","Complete"];
-  const STATUS_COLORS = { Measured:'#5b6899','In Production':'#c48a2f',Ready:'#3b9ede',Installed:'#9b7fe8',Snagging:'#e05252',Complete:'#3db87a' };
+  const STATUSES = ["Manufactured","Delivered","Part Install","Full Install","Snagging"];
+  const STATUS_COLORS = { Manufactured:'#5b6899',Delivered:'#3b9ede','Part Install':'#c48a2f','Full Install':'#9b7fe8',Snagging:'#e05252' };
   const STATE_KEY = 'pt_nav_state';
 
   let currentUser=null, userRole='standard';
@@ -790,13 +828,13 @@
 
   function updateStats() {
     document.getElementById('stat-total').textContent=plots.length;
-    document.getElementById('stat-complete').textContent=plots.filter(p=>p.status==='Complete').length;
+    document.getElementById('stat-complete').textContent=plots.filter(p=>p.status==='Full Install').length;
     document.getElementById('stat-snagging').textContent=plots.filter(p=>p.status==='Snagging').length;
-    document.getElementById('stat-progress').textContent=plots.filter(p=>!['Complete','Measured'].includes(p.status)).length;
+    document.getElementById('stat-progress').textContent=plots.filter(p=>!['Full Install','Manufactured'].includes(p.status)).length;
   }
 
   function updateProgress() {
-    const total=plots.length, complete=plots.filter(p=>p.status==='Complete').length;
+    const total=plots.length, complete=plots.filter(p=>p.status==='Full Install').length;
     const pct=total===0?0:Math.round((complete/total)*100);
     document.getElementById('progress-pct').textContent=pct+'%';
     document.getElementById('progress-bar').style.width=pct+'%';
@@ -811,7 +849,7 @@
   function updateUpcoming() {
     const today=new Date(); today.setHours(0,0,0,0);
     const next7=new Date(today); next7.setDate(next7.getDate()+7);
-    const up=plots.filter(p=>p.install_date&&p.status!=='Complete').filter(p=>{ const d=new Date(p.install_date); return d>=today&&d<=next7; }).sort((a,b)=>new Date(a.install_date)-new Date(b.install_date));
+    const up=plots.filter(p=>p.install_date&&p.status!=='Full Install').filter(p=>{ const d=new Date(p.install_date); return d>=today&&d<=next7; }).sort((a,b)=>new Date(a.install_date)-new Date(b.install_date));
     const bar=document.getElementById('upcoming-bar');
     if (!up.length) { bar.classList.remove('show'); return; }
     bar.classList.add('show');
@@ -834,7 +872,7 @@
     if (plots.find(p=>p.number.toLowerCase()===number.toLowerCase())) { showToast('Plot '+number+' already exists',true); return; }
     const btn=document.querySelector('.btn-add'); btn.disabled=true;
     const userLabel=currentUser.user_metadata?.full_name||currentUser.email;
-    const { data,error } = await sb.from('plots').insert({ site_id:currentSiteId,number,status:'Measured',notes:'',product_type:product,install_date:installDate,updated_by:userLabel }).select().single();
+    const { data,error } = await sb.from('plots').insert({ site_id:currentSiteId,number,status:'Manufactured',notes:'',product_type:product,install_date:installDate,updated_by:userLabel }).select().single();
     btn.disabled=false;
     if (error) { showToast('Error: '+error.message,true); return; }
     plots.push(data);
@@ -871,14 +909,71 @@
   }
 
   // ── Status ───────────────────────────────────────────────
+  let pendingPartInstallId = null;
+  let pendingPartInstallSelectEl = null;
+
   async function updateStatus(id,status) {
+    // Intercept Part Install to ask what's missing
+    if (status === 'Part Install') {
+      pendingPartInstallId = id;
+      const p = plots.find(x=>x.id===id);
+      document.getElementById('part-install-plot-title').textContent = `Plot ${p.number} — select items not yet installed`;
+      // Reset checkboxes
+      document.querySelectorAll('#missing-checkboxes input[type="checkbox"]').forEach(cb=>cb.checked=false);
+      document.getElementById('part-install-other').value = '';
+      // Pre-tick any previously saved missing items
+      if (p.notes && p.notes.startsWith('Missing:')) {
+        const existing = p.notes.replace('Missing:','').split(',').map(s=>s.trim());
+        document.querySelectorAll('#missing-checkboxes input[type="checkbox"]').forEach(cb=>{
+          if (existing.includes(cb.value)) cb.checked=true;
+        });
+        const knownItems = Array.from(document.querySelectorAll('#missing-checkboxes input[type="checkbox"]')).map(cb=>cb.value);
+        const otherItems = existing.filter(s=>!knownItems.includes(s));
+        if (otherItems.length) document.getElementById('part-install-other').value = otherItems.join(', ');
+      }
+      document.getElementById('modal-part-install').classList.add('open');
+      return;
+    }
+    await doUpdateStatus(id, status);
+  }
+
+  function cancelPartInstall() {
+    closeModals();
+    // Revert the dropdown back to previous status
+    const p = plots.find(x=>x.id===pendingPartInstallId);
+    if (p) {
+      // Reset both mobile and desktop selects
+      const selectors = document.querySelectorAll(`select.status-select`);
+      selectors.forEach(sel => {
+        if (sel.closest(`[id="row-${p.id}"]`) || sel.closest(`[id="card-${p.id}"]`)) {
+          sel.value = p.status;
+        }
+      });
+    }
+    pendingPartInstallId = null;
+  }
+
+  async function confirmPartInstall() {
+    const checked = Array.from(document.querySelectorAll('#missing-checkboxes input[type="checkbox"]:checked')).map(cb=>cb.value);
+    const other = document.getElementById('part-install-other').value.trim();
+    const allMissing = [...checked, ...(other ? other.split(',').map(s=>s.trim()).filter(Boolean) : [])];
+    const notesText = allMissing.length ? 'Missing: ' + allMissing.join(', ') : 'Part Install';
+    closeModals();
+    await doUpdateStatus(pendingPartInstallId, 'Part Install', notesText);
+    pendingPartInstallId = null;
+  }
+
+  async function doUpdateStatus(id, status, extraNotes=null) {
     const userLabel=currentUser.user_metadata?.full_name||currentUser.email;
-    const { error } = await sb.from('plots').update({ status,updated_at:new Date().toISOString(),updated_by:userLabel }).eq('id',id);
+    const updateData = { status,updated_at:new Date().toISOString(),updated_by:userLabel };
+    if (extraNotes !== null) updateData.notes = extraNotes;
+    const { error } = await sb.from('plots').update(updateData).eq('id',id);
     if (error) { showToast('Error',true); return; }
     const p=plots.find(x=>x.id===id); const prev=p.status;
     p.status=status; p.updated_at=new Date().toISOString(); p.updated_by=userLabel;
+    if (extraNotes !== null) p.notes = extraNotes;
     updateStats(); updateProgress();
-    await logAction(id,`Status: ${prev} → ${status}`);
+    await logAction(id,`Status: ${prev} → ${status}`+(extraNotes?` (${extraNotes})`:''));
     showToast('Status → '+status);
     renderPlots();
   }
@@ -1110,7 +1205,7 @@
     if (!csvPendingRows.length) { closeModals(); return; }
     const btn=document.getElementById('btn-csv-confirm'); btn.disabled=true; btn.textContent='Importing…';
     const userLabel=currentUser.user_metadata?.full_name||currentUser.email;
-    const { data,error } = await sb.from('plots').insert(csvPendingRows.map(n=>({ site_id:currentSiteId,number:n,status:'Measured',notes:'',product_type:'',updated_by:userLabel }))).select();
+    const { data,error } = await sb.from('plots').insert(csvPendingRows.map(n=>({ site_id:currentSiteId,number:n,status:'Manufactured',notes:'',product_type:'',updated_by:userLabel }))).select();
     btn.disabled=false;
     if (error) { showToast('Import error',true); return; }
     plots.push(...(data||[]));
@@ -1146,6 +1241,7 @@
   function closeModals() {
     document.querySelectorAll('.modal-overlay').forEach(m=>m.classList.remove('open'));
     pendingDeleteId=null; currentPhotoPlotId=null; currentSnagPlotId=null; currentDeliveryPlotId=null; currentEditPlotId=null;
+    // Don't reset pendingPartInstallId here — cancelPartInstall handles that
   }
   document.querySelectorAll('.modal-overlay').forEach(m=>{ m.addEventListener('click',e=>{ if (e.target===m) closeModals(); }); });
 
