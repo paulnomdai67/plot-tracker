@@ -433,11 +433,14 @@
     const name = currentUser.user_metadata?.full_name || currentUser.email;
     document.getElementById('user-chip').textContent = name;
 
-    const { data:roleData } = await sb.from('user_roles')
-      .select('role,department,is_head')
-      .eq('user_id', currentUser.id)
-      .single()
-      .catch(()=>({data:null}));
+    let roleData = null;
+    try {
+      const { data } = await sb.from('user_roles')
+        .select('role,department,is_head')
+        .eq('user_id', currentUser.id)
+        .single();
+      roleData = data;
+    } catch(_) {}
 
     userRole = roleData?.role || 'installation_user';
     userDept = roleData?.department || 'installation';

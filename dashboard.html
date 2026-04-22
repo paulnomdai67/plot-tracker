@@ -720,11 +720,14 @@
     currentUser = session.user;
 
     // Load role
-    const { data: roleData } = await sb.from('user_roles')
-      .select('role, department, display_name, is_head')
-      .eq('user_id', currentUser.id)
-      .single()
-      .catch(() => ({ data: null }));
+    let roleData = null;
+    try {
+      const { data } = await sb.from('user_roles')
+        .select('role, department, display_name, is_head')
+        .eq('user_id', currentUser.id)
+        .single();
+      roleData = data;
+    } catch(_) {}
 
     userRole = roleData?.role    || 'installation_user';
     userDept = roleData?.department || 'installation';
