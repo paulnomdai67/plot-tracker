@@ -8,163 +8,208 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    :root { --bg:#0f1117; --surface:#181c27; --surface2:#1e2333; --border:#2a3045; --text:#e8eaf0; --muted:#6b7491; --accent:#4f8ef7; --complete:#3db87a; --snagging:#e05252; }
-    *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
-    body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
-    header { background:var(--surface); border-bottom:1px solid var(--border); padding:0 24px; height:60px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; }
-    .logo { display:flex; align-items:center; gap:10px; font-weight:600; font-size:15px; }
-    .logo-icon { width:30px; height:30px; background:var(--accent); border-radius:7px; display:grid; place-items:center; }
-    .logo-icon svg { width:16px; height:16px; }
-    .header-right { display:flex; gap:10px; }
-    .btn-sm { padding:6px 14px; border-radius:6px; font-size:12px; font-weight:500; font-family:'DM Sans',sans-serif; cursor:pointer; transition:all .15s; background:transparent; border:1px solid var(--border); color:var(--muted); text-decoration:none; display:inline-block; }
-    .btn-sm:hover { border-color:var(--accent); color:var(--accent); }
-    main { max-width:960px; margin:0 auto; padding:32px 24px 80px; }
-    h1 { font-size:20px; font-weight:600; margin-bottom:4px; }
-    .page-sub { font-size:13px; color:var(--muted); margin-bottom:28px; }
-    .filters { display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; align-items:center; }
-    select.filter-select { background:var(--surface); border:1px solid var(--border); color:var(--text); border-radius:7px; padding:7px 12px; font-size:13px; font-family:'DM Sans',sans-serif; outline:none; min-width:150px; cursor:pointer; }
-    select.filter-select:focus { border-color:var(--accent); }
-    input.filter-input { background:var(--surface); border:1px solid var(--border); color:var(--text); border-radius:7px; padding:7px 12px; font-size:13px; font-family:'DM Sans',sans-serif; outline:none; width:200px; }
-    input.filter-input:focus { border-color:var(--accent); }
-    input.filter-input::placeholder { color:var(--muted); }
-    .filter-count { font-size:12px; color:var(--muted); margin-left:auto; }
-    .log-wrap { background:var(--surface); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
-    .log-header { display:grid; grid-template-columns:150px 90px 1fr 160px; gap:12px; padding:10px 20px; background:var(--surface2); border-bottom:1px solid var(--border); font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.07em; }
-    .log-entry { display:grid; grid-template-columns:150px 90px 1fr 160px; gap:12px; padding:12px 20px; border-bottom:1px solid var(--border); align-items:center; transition:background .1s; }
-    .log-entry:last-child { border-bottom:none; }
-    .log-entry:hover { background:var(--surface2); }
-    .log-time { font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); line-height:1.5; }
-    .log-type { font-size:11px; font-weight:600; }
-    .type-login    { color:var(--accent); }
-    .type-plot     { color:var(--complete); }
-    .type-photo    { color:#c48a2f; }
-    .type-import   { color:#9b7fe8; }
-    .type-delivery { color:#3b9ede; }
-    .type-snag     { color:var(--snagging); }
-    .type-other    { color:var(--muted); }
-    .log-action { font-size:13px; line-height:1.5; }
-    .log-plot { font-family:'DM Mono',monospace; font-size:12px; color:var(--accent); font-weight:500; }
-    .log-user { font-size:11px; color:var(--muted); font-weight:500; text-align:right; }
-    .empty { text-align:center; padding:60px 20px; color:var(--muted); }
-    .loading { text-align:center; padding:40px; color:var(--muted); font-size:13px; }
-    @media (max-width:700px) { .log-entry,.log-header { grid-template-columns:1fr; gap:4px; } .log-header { display:none; } .log-user { text-align:left; } }
+    :root{--bg:#0f1117;--surface:#181c27;--surface2:#1e2333;--border:#2a3045;--text:#e8eaf0;--muted:#6b7491;--accent:#4f8ef7;--complete:#3db87a;--snagging:#e05252}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+    header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+    .header-left{display:flex;align-items:center;gap:16px}
+    .logo{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px}
+    .logo-icon{width:30px;height:30px;background:var(--accent);border-radius:7px;display:grid;place-items:center}
+    .logo-icon svg{width:16px;height:16px}
+    .nav-links{display:flex;gap:4px}
+    .nav-link{padding:5px 12px;border-radius:6px;font-size:12px;font-weight:500;color:var(--muted);text-decoration:none;transition:all .15s;border:1px solid transparent}
+    .nav-link:hover{color:var(--text);background:var(--surface2)}
+    .nav-link.active{color:var(--accent);border-color:var(--border)}
+    .header-right{display:flex;align-items:center;gap:10px}
+    .user-chip{font-size:13px;color:var(--muted);padding:4px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:20px}
+    .role-badge{font-size:10px;font-weight:600;padding:3px 8px;border-radius:5px;text-transform:uppercase;letter-spacing:.3px}
+    .role-admin{background:#4f8ef722;color:#4f8ef7}
+    .role-standard{background:#6b749122;color:#6b7491}
+    .role-director{background:#f74f9522;color:#f74f95}
+    .role-head{background:#f7954f22;color:#f7954f}
+    .btn-sm{padding:6px 14px;border-radius:6px;font-size:12px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .15s;background:transparent;border:1px solid var(--border);color:var(--muted)}
+    .btn-sm:hover{border-color:var(--accent);color:var(--accent)}
+    .controls{padding:16px 24px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;border-bottom:1px solid var(--border);background:var(--surface)}
+    select{background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:7px 12px;cursor:pointer}
+    select:focus{outline:none;border-color:var(--accent)}
+    .log-wrap{max-width:900px;margin:24px auto;padding:0 24px}
+    .log-list{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    .log-item{display:grid;grid-template-columns:140px 1fr 180px;gap:12px;padding:12px 18px;border-bottom:1px solid var(--border);font-size:13px;align-items:start}
+    .log-item:last-child{border-bottom:none}
+    .log-item:hover{background:var(--surface2)}
+    .log-time{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);padding-top:2px}
+    .log-action{line-height:1.5}
+    .log-plot{color:var(--accent);font-weight:500}
+    .log-type{font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;text-transform:uppercase;letter-spacing:.3px;justify-self:end;align-self:start}
+    .type-Plot{background:#4f8ef722;color:#4f8ef7}
+    .type-Login{background:#3db87a22;color:#3db87a}
+    .type-Photo{background:#9b7fe822;color:#9b7fe8}
+    .type-Import{background:#c48a2f22;color:#c48a2f}
+    .type-Delivery{background:#3b9ede22;color:#3b9ede}
+    .type-Snag{background:#e0525222;color:#e05252}
+    .type-Workflow{background:#f7954f22;color:#f7954f}
+    .empty{padding:60px;text-align:center;color:var(--muted)}
+    .loading{padding:60px;text-align:center;color:var(--muted)}
   </style>
 </head>
 <body>
 <header>
-  <div class="logo">
-    <div class="logo-icon">
-      <svg viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="1.6">
-        <rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.2"/>
-        <rect x="9" y="1.5" width="5.5" height="5.5" rx="1.2"/>
-        <rect x="1.5" y="9" width="5.5" height="5.5" rx="1.2"/>
-        <rect x="9" y="9" width="5.5" height="5.5" rx="1.2"/>
-      </svg>
+  <div class="header-left">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      </div>
+      Plot Tracker
     </div>
-    Plot Tracker
+    <nav class="nav-links">
+      <a href="dashboard.html" class="nav-link">Dashboard</a>
+      <a href="index.html" class="nav-link">Installation</a>
+      <a href="log.html" class="nav-link active">Log</a>
+      <a href="report.html" class="nav-link">Report</a>
+    </nav>
   </div>
   <div class="header-right">
-    <a href="index.html" class="btn-sm">← Back to Plots</a>
+    <span class="user-chip" id="user-chip">…</span>
+    <span class="role-badge" id="role-badge"></span>
+    <button class="btn-sm" onclick="signOut()">Sign out</button>
   </div>
 </header>
-<main>
-  <h1>Activity Log</h1>
-  <p class="page-sub">Full audit trail — all changes, logins, deliveries and snagging sign-offs.</p>
-  <div class="filters">
-    <select class="filter-select" id="filter-site" onchange="loadLog()"><option value="">All Sites</option></select>
-    <select class="filter-select" id="filter-type" onchange="renderLog()">
-      <option value="">All Activity</option>
-      <option value="login">Logins</option>
-      <option value="plot">Plot Changes</option>
-      <option value="photo">Photos</option>
-      <option value="import">CSV Imports</option>
-      <option value="delivery">Deliveries</option>
-      <option value="snag">Snagging</option>
-    </select>
-    <select class="filter-select" id="filter-user" onchange="renderLog()"><option value="">All Users</option></select>
-    <input class="filter-input" id="filter-search" type="text" placeholder="Search actions…" oninput="renderLog()"/>
-    <span class="filter-count" id="filter-count"></span>
-  </div>
-  <div class="log-wrap">
-    <div class="log-header"><span>Time</span><span>Type</span><span>Action</span><span style="text-align:right">User</span></div>
-    <div id="log-body"></div>
-    <div id="loading" class="loading">Loading activity…</div>
-    <div id="empty" class="empty" style="display:none"><p>No activity found.</p></div>
-  </div>
-</main>
+
+<div class="controls">
+  <select id="filter-dev" onchange="onFilterChange()"><option value="">All Developers</option></select>
+  <select id="filter-site" onchange="onFilterChange()" disabled><option value="">All Sites</option></select>
+  <select id="filter-type" onchange="onFilterChange()">
+    <option value="">All Types</option>
+    <option>Login</option><option>Plot</option><option>Photo</option>
+    <option>Import</option><option>Delivery</option><option>Snag</option><option>Workflow</option>
+  </select>
+  <select id="filter-limit" onchange="onFilterChange()">
+    <option value="50">Last 50</option>
+    <option value="100">Last 100</option>
+    <option value="250">Last 250</option>
+    <option value="500">Last 500</option>
+  </select>
+</div>
+
+<div class="log-wrap">
+  <div class="log-list" id="log-list"><div class="loading">Loading activity…</div></div>
+</div>
+
 <script>
   const SUPABASE_URL = 'https://fddnkveadygyfjlkuhyl.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZkZG5rdmVhZHlneWZqbGt1aHlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNDUwNzIsImV4cCI6MjA5MDcyMTA3Mn0.23x_7Pl_XvhG4dwiwYVFVmFSaQEuxZZcK1gLC58Q3dM';
   const { createClient } = supabase;
   const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
-  let allEntries=[];
+
+  let currentUser=null, userRole='installation_user';
+  let developers=[], sites=[];
+
+  function getRoleLabel() {
+    const labels={system_admin:'System Admin',director:'Director',estimate_head:'Estimate Head',estimate_user:'Estimate User',production_head:'Production Head',production_user:'Production User',installation_head:'Install Head',installation_user:'Install User',care_head:'Care Head',care_user:'Care User',admin:'Admin',standard:'Standard'};
+    return labels[userRole]||userRole;
+  }
+  function getRoleBadgeClass() {
+    if(userRole==='system_admin') return 'role-admin';
+    if(userRole==='director') return 'role-director';
+    if(userRole.endsWith('_head')) return 'role-head';
+    return 'role-standard';
+  }
 
   async function init() {
     const { data:{ session } } = await sb.auth.getSession();
     if (!session) { window.location.href='login.html'; return; }
-    const { data } = await sb.from('sites').select('id,name,developers(name)').order('name');
-    const sel=document.getElementById('filter-site');
-    sel.innerHTML='<option value="">All Sites</option>'+(data||[]).map(s=>`<option value="${s.id}">${s.developers?.name?s.developers.name+' — ':''}${s.name}</option>`).join('');
+    currentUser = session.user;
+    document.getElementById('user-chip').textContent = currentUser.user_metadata?.full_name||currentUser.email;
+    const { data:roleData } = await sb.from('user_roles').select('role').eq('user_id',currentUser.id).single().catch(()=>({data:null}));
+    userRole = roleData?.role||'installation_user';
+    const badge=document.getElementById('role-badge');
+    badge.textContent=getRoleLabel(); badge.className='role-badge '+getRoleBadgeClass();
+    await loadDevelopers();
+    await loadLog();
+  }
+
+  async function signOut() {
+    await sb.auth.signOut();
+    window.location.href='login.html';
+  }
+
+  async function loadDevelopers() {
+    const { data } = await sb.from('developers').select('*').order('name');
+    developers=data||[];
+    const sel=document.getElementById('filter-dev');
+    sel.innerHTML='<option value="">All Developers</option>'+developers.map(d=>`<option value="${d.id}">${esc(d.name)}</option>`).join('');
+  }
+
+  async function onFilterChange() {
+    const devId=document.getElementById('filter-dev').value;
+    if (devId) {
+      const { data } = await sb.from('sites').select('*').eq('developer_id',devId).order('name');
+      sites=data||[];
+      const sel=document.getElementById('filter-site');
+      sel.innerHTML='<option value="">All Sites</option>'+sites.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');
+      sel.disabled=false;
+    } else {
+      document.getElementById('filter-site').innerHTML='<option value="">All Sites</option>';
+      document.getElementById('filter-site').disabled=true;
+    }
     await loadLog();
   }
 
   async function loadLog() {
-    document.getElementById('loading').style.display='block';
-    document.getElementById('log-body').innerHTML='';
-    document.getElementById('empty').style.display='none';
     const siteId=document.getElementById('filter-site').value;
-    let query=sb.from('audit_log').select('*,plots(number)').order('created_at',{ascending:false}).limit(500);
-    if (siteId) query=query.eq('site_id',siteId);
-    const { data } = await query;
-    document.getElementById('loading').style.display='none';
-    allEntries=data||[];
-    const users=[...new Set(allEntries.map(e=>e.user_email))].sort();
-    const userSel=document.getElementById('filter-user'); const cur=userSel.value;
-    userSel.innerHTML='<option value="">All Users</option>'+users.map(u=>`<option value="${u}" ${u===cur?'selected':''}>${u}</option>`).join('');
-    renderLog();
+    const type=document.getElementById('filter-type').value;
+    const limit=parseInt(document.getElementById('filter-limit').value)||50;
+
+    // Load both audit tables
+    let q1=sb.from('audit_log').select('*,plots(number,site_id)').order('created_at',{ascending:false}).limit(limit);
+    if (siteId) q1=q1.eq('site_id',siteId);
+
+    let q2=sb.from('workflow_audit').select('*').order('created_at',{ascending:false}).limit(limit);
+
+    const [r1,r2]=await Promise.all([q1,q2]);
+
+    let items=[];
+
+    // Plot audit items
+    (r1.data||[]).forEach(e=>{
+      let t='Plot';
+      if(e.action?.toLowerCase().includes('sign')) t='Login';
+      if(e.action?.toLowerCase().includes('photo')) t='Photo';
+      if(e.action?.toLowerCase().includes('import')) t='Import';
+      if(e.action?.toLowerCase().includes('delivery')) t='Delivery';
+      if(e.action?.toLowerCase().includes('snag')) t='Snag';
+      items.push({ time:e.created_at, user:e.user_email, action:e.action, plot:e.plots?.number||null, type:t });
+    });
+
+    // Workflow audit items
+    (r2.data||[]).forEach(e=>{
+      items.push({ time:e.created_at, user:e.user_email, action:e.action, plot:null, type:'Workflow' });
+    });
+
+    // Sort and filter
+    items.sort((a,b)=>new Date(b.time)-new Date(a.time));
+    if(type) items=items.filter(i=>i.type===type);
+    items=items.slice(0,limit);
+
+    const el=document.getElementById('log-list');
+    if(!items.length){el.innerHTML='<div class="empty">No activity found</div>';return;}
+    el.innerHTML=items.map(e=>`
+      <div class="log-item">
+        <div class="log-time">${formatDateTime(e.time)}</div>
+        <div class="log-action">
+          ${e.plot?`<span class="log-plot">Plot ${esc(e.plot)}</span> — `:''}${esc(e.action)}
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">${esc(e.user)}</div>
+        </div>
+        <div><span class="log-type type-${e.type}">${e.type}</span></div>
+      </div>`).join('');
   }
 
-  function getType(action) {
-    const a=action.toLowerCase();
-    if (a.includes('signed in')||a.includes('signed out')||a.includes('account created')) return 'login';
-    if (a.includes('photo')) return 'photo';
-    if (a.includes('csv')||a.includes('bulk import')) return 'import';
-    if (a.includes('delivery')) return 'delivery';
-    if (a.includes('snagging')||a.includes('snag')) return 'snag';
-    if (a.includes('plot')||a.includes('status')||a.includes('notes')||a.includes('created')||a.includes('product')||a.includes('date')) return 'plot';
-    return 'other';
+  function formatDateTime(ts) {
+    const d=new Date(ts);
+    return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'})+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
   }
+  function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 
-  function typeLabel(t) { return {login:'Login',photo:'Photo',import:'Import',delivery:'Delivery',snag:'Snag',plot:'Plot',other:'Other'}[t]||'Other'; }
-
-  function renderLog() {
-    const uf=document.getElementById('filter-user').value;
-    const tf=document.getElementById('filter-type').value;
-    const q=document.getElementById('filter-search').value.trim().toLowerCase();
-    const filtered=allEntries
-      .filter(e=>!uf||e.user_email===uf)
-      .filter(e=>!tf||getType(e.action)===tf)
-      .filter(e=>!q||e.action.toLowerCase().includes(q)||(e.plots?.number||'').toLowerCase().includes(q)||e.user_email.toLowerCase().includes(q));
-    document.getElementById('filter-count').textContent=filtered.length+' entr'+(filtered.length===1?'y':'ies');
-    const body=document.getElementById('log-body');
-    const empty=document.getElementById('empty');
-    if (!filtered.length) { body.innerHTML=''; empty.style.display='block'; return; }
-    empty.style.display='none';
-    body.innerHTML=filtered.map(e=>{
-      const dt=new Date(e.created_at);
-      const date=dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
-      const time=dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-      const t=getType(e.action);
-      return `<div class="log-entry">
-        <div class="log-time">${date}<br>${time}</div>
-        <div class="log-type type-${t}">${typeLabel(t)}</div>
-        <div class="log-action">${e.plots?.number?`<span class="log-plot">Plot ${esc(e.plots.number)}</span> — `:''}${esc(e.action)}</div>
-        <div class="log-user">${esc(e.user_email)}</div>
-      </div>`;
-    }).join('');
-  }
-
-  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   init();
 </script>
 </body>

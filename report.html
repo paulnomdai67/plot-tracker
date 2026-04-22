@@ -8,141 +8,96 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    :root { --bg:#0f1117; --surface:#181c27; --surface2:#1e2333; --border:#2a3045; --text:#e8eaf0; --muted:#6b7491; --accent:#4f8ef7; --complete:#3db87a; --snagging:#e05252; --amber:#c48a2f; }
-    *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
-    body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
-    header { background:var(--surface); border-bottom:1px solid var(--border); padding:0 24px; height:60px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; }
-    .logo { display:flex; align-items:center; gap:10px; font-weight:600; font-size:15px; }
-    .logo-icon { width:30px; height:30px; background:var(--accent); border-radius:7px; display:grid; place-items:center; }
-    .logo-icon svg { width:16px; height:16px; }
-    .header-right { display:flex; gap:10px; }
-    .btn-sm { padding:6px 14px; border-radius:6px; font-size:12px; font-weight:500; font-family:'DM Sans',sans-serif; cursor:pointer; transition:all .15s; background:transparent; border:1px solid var(--border); color:var(--muted); text-decoration:none; display:inline-block; }
-    .btn-sm:hover { border-color:var(--accent); color:var(--accent); }
-    main { max-width:900px; margin:0 auto; padding:32px 24px 80px; }
-    h1 { font-size:20px; font-weight:600; margin-bottom:4px; }
-    .page-sub { font-size:13px; color:var(--muted); margin-bottom:28px; }
-
-    .selectors { display:flex; gap:12px; margin-bottom:24px; flex-wrap:wrap; align-items:flex-end; }
-    .sel-group { display:flex; flex-direction:column; gap:6px; }
-    .sel-group label { font-size:11px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:0.07em; }
-    select.report-select { background:var(--surface); border:1px solid var(--border); color:var(--text); border-radius:7px; padding:8px 14px; font-size:13px; font-family:'DM Sans',sans-serif; outline:none; min-width:200px; cursor:pointer; }
-    select.report-select:focus { border-color:var(--accent); }
-    .btn-generate { padding:9px 22px; background:var(--accent); color:#fff; border:none; border-radius:7px; font-size:13px; font-weight:600; font-family:'DM Sans',sans-serif; cursor:pointer; transition:opacity .15s; }
-    .btn-generate:hover { opacity:0.85; }
-    .btn-generate:disabled { opacity:0.5; cursor:not-allowed; }
-    .btn-print { padding:9px 22px; background:var(--complete); color:#fff; border:none; border-radius:7px; font-size:13px; font-weight:600; font-family:'DM Sans',sans-serif; cursor:pointer; transition:opacity .15s; }
-    .btn-print:hover { opacity:0.85; }
-
-    #report-output { display:none; }
-
-    /* Report styles */
-    .report-wrap { background:var(--surface); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
-    .report-header { background:var(--surface2); padding:28px 32px; border-bottom:1px solid var(--border); }
-    .report-title { font-size:22px; font-weight:700; margin-bottom:4px; }
-    .report-meta { font-size:13px; color:var(--muted); }
-    .report-date { font-size:12px; color:var(--muted); margin-top:4px; font-family:'DM Mono',monospace; }
-
-    .report-stats { display:grid; grid-template-columns:repeat(5,1fr); gap:0; border-bottom:1px solid var(--border); }
-    .report-stat { padding:20px; text-align:center; border-right:1px solid var(--border); }
-    .report-stat:last-child { border-right:none; }
-    .rs-label { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:6px; font-weight:600; }
-    .rs-value { font-size:28px; font-weight:700; }
-    .rs-complete { color:var(--complete); }
-    .rs-snagging { color:var(--snagging); }
-    .rs-progress { color:var(--accent); }
-    .rs-total { color:var(--text); }
-
-    .progress-section-report { padding:20px 32px; border-bottom:1px solid var(--border); }
-    .progress-bar-wrap { background:var(--surface2); border-radius:6px; height:12px; overflow:hidden; margin-top:8px; }
-    .progress-bar-fill { height:100%; border-radius:6px; background:linear-gradient(90deg,var(--accent),var(--complete)); }
-    .progress-label-row { display:flex; justify-content:space-between; align-items:center; }
-    .progress-label-text { font-size:13px; font-weight:600; }
-    .progress-pct-text { font-size:18px; font-weight:700; color:var(--complete); font-family:'DM Mono',monospace; }
-
-    .report-section { padding:24px 32px; border-bottom:1px solid var(--border); }
-    .report-section:last-child { border-bottom:none; }
-    .section-title { font-size:14px; font-weight:700; color:var(--text); margin-bottom:16px; display:flex; align-items:center; gap:8px; }
-    .section-count { font-size:11px; color:var(--muted); font-weight:400; font-family:'DM Mono',monospace; }
-
-    .plot-row { display:grid; grid-template-columns:80px 1fr 140px 120px; gap:12px; padding:10px 0; border-bottom:1px solid var(--border); align-items:start; font-size:13px; }
-    .plot-row:last-child { border-bottom:none; }
-    .plot-row-header { font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; }
-    .plot-num-r { font-family:'DM Mono',monospace; font-weight:600; }
-    .plot-notes-r { font-size:12px; color:var(--muted); }
-    .plot-notes-r.has-note { color:var(--text); }
-
-    .badge-sm { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:600; }
-    .badge-sm::before { content:''; width:4px; height:4px; border-radius:50%; background:currentColor; flex-shrink:0; }
-    .b-Measured      { background:#1a2040; color:#5b6899; }
-    .b-In-Production { background:#2a1f00; color:#c48a2f; }
-    .b-Ready         { background:#0d2540; color:#3b9ede; }
-    .b-Installed     { background:#1d1040; color:#9b7fe8; }
-    .b-Snagging      { background:#2e0f0f; color:#e05252; }
-    .b-Complete      { background:#0d2a1a; color:#3db87a; }
-
-    .snag-flag { font-size:11px; color:var(--snagging); font-weight:600; }
-    .resolved-flag { font-size:11px; color:var(--complete); font-weight:600; }
-    .defect-tag { font-size:10px; background:var(--snagging-bg); color:var(--snagging); padding:1px 6px; border-radius:3px; display:inline-block; margin-top:3px; }
-
-    .empty-section { font-size:13px; color:var(--muted); font-style:italic; padding:8px 0; }
-
-    /* Print styles */
-    @media print {
-      body { background:#fff; color:#000; }
-      header, .selectors, .btn-print { display:none !important; }
-      .report-wrap { border:1px solid #ccc; }
-      .report-header { background:#f5f7ff; }
-      .report-stats { background:#fff; }
-      .report-section { background:#fff; }
-      .progress-bar-wrap { background:#eee; }
-      main { padding:0; max-width:100%; }
-      #report-output { display:block !important; }
+    :root{--bg:#0f1117;--surface:#181c27;--surface2:#1e2333;--border:#2a3045;--text:#e8eaf0;--muted:#6b7491;--accent:#4f8ef7;--complete:#3db87a;--snagging:#e05252;--measured:#5b6899;--production:#c48a2f;--ready:#3b9ede;--installed:#9b7fe8}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+    header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+    .header-left{display:flex;align-items:center;gap:16px}
+    .logo{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px}
+    .logo-icon{width:30px;height:30px;background:var(--accent);border-radius:7px;display:grid;place-items:center}
+    .logo-icon svg{width:16px;height:16px}
+    .nav-links{display:flex;gap:4px}
+    .nav-link{padding:5px 12px;border-radius:6px;font-size:12px;font-weight:500;color:var(--muted);text-decoration:none;transition:all .15s;border:1px solid transparent}
+    .nav-link:hover{color:var(--text);background:var(--surface2)}
+    .nav-link.active{color:var(--accent);border-color:var(--border)}
+    .header-right{display:flex;align-items:center;gap:10px}
+    .user-chip{font-size:13px;color:var(--muted);padding:4px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:20px}
+    .role-badge{font-size:10px;font-weight:600;padding:3px 8px;border-radius:5px;text-transform:uppercase;letter-spacing:.3px}
+    .role-admin{background:#4f8ef722;color:#4f8ef7}
+    .role-standard{background:#6b749122;color:#6b7491}
+    .role-director{background:#f74f9522;color:#f74f95}
+    .role-head{background:#f7954f22;color:#f7954f}
+    .btn-sm{padding:6px 14px;border-radius:6px;font-size:12px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .15s;background:transparent;border:1px solid var(--border);color:var(--muted)}
+    .btn-sm:hover{border-color:var(--accent);color:var(--accent)}
+    .controls{padding:16px 24px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;border-bottom:1px solid var(--border);background:var(--surface)}
+    select{background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:7px 12px;cursor:pointer}
+    select:focus{outline:none;border-color:var(--accent)}
+    select:disabled{opacity:.4;cursor:not-allowed}
+    .btn-generate{padding:8px 20px;border-radius:8px;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;background:var(--accent);color:#fff;border:none}
+    .btn-generate:hover{opacity:.85}
+    .btn-print{padding:8px 20px;border-radius:8px;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;background:var(--complete);color:#fff;border:none;display:none}
+    .report-wrap{max-width:900px;margin:24px auto;padding:0 24px 60px}
+    .report-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:28px;margin-bottom:20px}
+    .report-title{font-size:22px;font-weight:600;margin-bottom:4px}
+    .report-sub{font-size:13px;color:var(--muted)}
+    .progress-bar-wrap{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin:20px 0}
+    .progress-bar{height:10px;border-radius:5px;background:var(--surface2);overflow:hidden;display:flex}
+    .progress-segment{height:100%}
+    .progress-legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px}
+    .legend-item{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted)}
+    .legend-dot{width:8px;height:8px;border-radius:50%}
+    .report-section{margin-bottom:20px}
+    .section-title{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+    .section-count{font-family:'DM Mono',monospace;font-size:11px;background:var(--surface2);border:1px solid var(--border);padding:2px 8px;border-radius:4px;color:var(--text)}
+    .plot-table{width:100%;border-collapse:collapse}
+    .plot-table th{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);padding:8px 12px;text-align:left;border-bottom:1px solid var(--border)}
+    .plot-table td{padding:10px 12px;font-size:13px;border-bottom:1px solid var(--border)}
+    .plot-table tr:last-child td{border-bottom:none}
+    .plot-table tr:hover td{background:var(--surface2)}
+    .status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+    .placeholder-msg{padding:60px;text-align:center;color:var(--muted)}
+    @media print{
+      header,.controls,.btn-print{display:none!important}
+      body{background:#fff;color:#000}
+      .report-card{border:1px solid #ddd;box-shadow:none}
+      .report-wrap{margin:0;padding:0;max-width:100%}
     }
   </style>
 </head>
 <body>
 <header>
-  <div class="logo">
-    <div class="logo-icon">
-      <svg viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="1.6">
-        <rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.2"/>
-        <rect x="9" y="1.5" width="5.5" height="5.5" rx="1.2"/>
-        <rect x="1.5" y="9" width="5.5" height="5.5" rx="1.2"/>
-        <rect x="9" y="9" width="5.5" height="5.5" rx="1.2"/>
-      </svg>
+  <div class="header-left">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      </div>
+      Plot Tracker
     </div>
-    Plot Tracker
+    <nav class="nav-links">
+      <a href="dashboard.html" class="nav-link">Dashboard</a>
+      <a href="index.html" class="nav-link">Installation</a>
+      <a href="log.html" class="nav-link">Log</a>
+      <a href="report.html" class="nav-link active">Report</a>
+    </nav>
   </div>
   <div class="header-right">
-    <a href="index.html" class="btn-sm">← Back to Plots</a>
+    <span class="user-chip" id="user-chip">…</span>
+    <span class="role-badge" id="role-badge"></span>
+    <button class="btn-sm" onclick="signOut()">Sign out</button>
   </div>
 </header>
 
-<main>
-  <h1>Site Report</h1>
-  <p class="page-sub">Generate a printable progress report for any site — suitable for sharing with developers.</p>
+<div class="controls">
+  <select id="sel-dev" onchange="onDevChange()"><option value="">— Developer —</option></select>
+  <select id="sel-site" disabled><option value="">— Site —</option></select>
+  <button class="btn-generate" onclick="generateReport()">Generate Report</button>
+  <button class="btn-print" id="btn-print" onclick="window.print()">🖨 Print / PDF</button>
+</div>
 
-  <div class="selectors">
-    <div class="sel-group">
-      <label>Developer</label>
-      <select class="report-select" id="r-dev" onchange="loadRSites()">
-        <option value="">— Select developer —</option>
-      </select>
-    </div>
-    <div class="sel-group">
-      <label>Site</label>
-      <select class="report-select" id="r-site" disabled>
-        <option value="">— Select site —</option>
-      </select>
-    </div>
-    <button class="btn-generate" onclick="generateReport()">Generate Report</button>
-    <button class="btn-print" onclick="window.print()" id="btn-print" style="display:none">🖨 Print / Save PDF</button>
-  </div>
-
-  <div id="report-output">
-    <div class="report-wrap" id="report-content"></div>
-  </div>
-</main>
+<div class="report-wrap">
+  <div id="report-placeholder" class="placeholder-msg">Select a developer and site, then click Generate Report</div>
+  <div id="report-output" style="display:none"></div>
+</div>
 
 <script>
   const SUPABASE_URL = 'https://fddnkveadygyfjlkuhyl.supabase.co';
@@ -150,137 +105,143 @@
   const { createClient } = supabase;
   const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  const STATUSES = ["Measured","In Production","Ready","Installed","Snagging","Complete"];
+  const STATUSES=['Measured','In Production','Ready','Installed','Snagging','Complete'];
+  const STATUS_COLORS={Measured:'#5b6899','In Production':'#c48a2f',Ready:'#3b9ede',Installed:'#9b7fe8',Snagging:'#e05252',Complete:'#3db87a'};
+
+  let currentUser=null, userRole='installation_user';
+  let developers=[], sites=[];
+
+  function getRoleLabel(){const l={system_admin:'System Admin',director:'Director',estimate_head:'Estimate Head',estimate_user:'Estimate User',production_head:'Production Head',production_user:'Production User',installation_head:'Install Head',installation_user:'Install User',care_head:'Care Head',care_user:'Care User',admin:'Admin',standard:'Standard'};return l[userRole]||userRole}
+  function getRoleBadgeClass(){if(userRole==='system_admin')return 'role-admin';if(userRole==='director')return 'role-director';if(userRole.endsWith('_head'))return 'role-head';return 'role-standard'}
 
   async function init() {
     const { data:{ session } } = await sb.auth.getSession();
     if (!session) { window.location.href='login.html'; return; }
-    const { data } = await sb.from('developers').select('*').order('name');
-    const sel=document.getElementById('r-dev');
-    sel.innerHTML='<option value="">— Select developer —</option>'+(data||[]).map(d=>`<option value="${d.id}" data-name="${d.name}">${d.name}</option>`).join('');
+    currentUser=session.user;
+    document.getElementById('user-chip').textContent=currentUser.user_metadata?.full_name||currentUser.email;
+    const { data:roleData }=await sb.from('user_roles').select('role').eq('user_id',currentUser.id).single().catch(()=>({data:null}));
+    userRole=roleData?.role||'installation_user';
+    const badge=document.getElementById('role-badge');
+    badge.textContent=getRoleLabel(); badge.className='role-badge '+getRoleBadgeClass();
+    const { data }=await sb.from('developers').select('*').order('name');
+    developers=data||[];
+    const sel=document.getElementById('sel-dev');
+    sel.innerHTML='<option value="">— Developer —</option>'+developers.map(d=>`<option value="${d.id}">${esc(d.name)}</option>`).join('');
   }
 
-  async function loadRSites() {
-    const devId=document.getElementById('r-dev').value;
-    const sel=document.getElementById('r-site');
-    if (!devId) { sel.innerHTML='<option value="">— Select site —</option>'; sel.disabled=true; return; }
-    const { data } = await sb.from('sites').select('*').eq('developer_id',devId).order('name');
-    sel.innerHTML='<option value="">— Select site —</option>'+(data||[]).map(s=>`<option value="${s.id}" data-name="${s.name}">${s.name}</option>`).join('');
-    sel.disabled=false;
+  async function signOut(){await sb.auth.signOut();window.location.href='login.html'}
+
+  async function onDevChange(){
+    const devId=document.getElementById('sel-dev').value;
+    const siteSel=document.getElementById('sel-site');
+    if(!devId){siteSel.innerHTML='<option value="">— Site —</option>';siteSel.disabled=true;return}
+    const{data}=await sb.from('sites').select('*').eq('developer_id',devId).order('name');
+    sites=data||[];
+    siteSel.innerHTML='<option value="">— Site —</option>'+sites.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');
+    siteSel.disabled=false;
   }
 
-  function badgeHtml(status) {
-    const cls='badge-sm b-'+status.replace(/\s+/g,'-');
-    return `<span class="${cls}">${status}</span>`;
-  }
+  async function generateReport(){
+    const devId=document.getElementById('sel-dev').value;
+    const siteId=document.getElementById('sel-site').value;
+    if(!devId||!siteId){alert('Please select a developer and site');return}
+    const dev=developers.find(d=>d.id===devId);
+    const site=sites.find(s=>s.id===siteId);
+    const[{data:plots},{data:snags},{data:deliveries}]=await Promise.all([
+      sb.from('plots').select('*').eq('site_id',siteId).order('number'),
+      sb.from('snagging_photos').select('plot_id').eq('site_id',siteId),
+      sb.from('deliveries').select('*').eq('site_id',siteId)
+    ]);
+    const photoCounts={};(snags||[]).forEach(r=>{photoCounts[r.plot_id]=(photoCounts[r.plot_id]||0)+1});
+    const total=(plots||[]).length;
+    const counts={};STATUSES.forEach(s=>counts[s]=0);
+    (plots||[]).forEach(p=>{if(counts[p.status]!==undefined)counts[p.status]++});
+    const complete=counts['Complete'];
+    const pct=total?Math.round((complete/total)*100):0;
+    const today=new Date();today.setHours(0,0,0,0);
+    const in7=new Date(today);in7.setDate(in7.getDate()+7);
+    const upcoming=(plots||[]).filter(p=>{if(!p.install_date)return false;const d=new Date(p.install_date);return d>=today&&d<=in7}).sort((a,b)=>new Date(a.install_date)-new Date(b.install_date));
+    const activSnags=(plots||[]).filter(p=>p.status==='Snagging');
+    const pendingDel=(deliveries||[]).filter(d=>d.status!=='Arrived');
 
-  function fmtDate(d) { return d?new Date(d).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):'—'; }
-  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-  async function generateReport() {
-    const devSel=document.getElementById('r-dev');
-    const siteSel=document.getElementById('r-site');
-    const devId=devSel.value;
-    const siteId=siteSel.value;
-    if (!devId||!siteId) { alert('Please select a developer and site.'); return; }
-    const devName=devSel.options[devSel.selectedIndex].dataset.name;
-    const siteName=siteSel.options[siteSel.selectedIndex].dataset.name;
-
-    const btn=document.querySelector('.btn-generate');
-    btn.disabled=true; btn.textContent='Generating…';
-
-    const { data:plots } = await sb.from('plots').select('*').eq('site_id',siteId).order('number');
-    const allPlots=plots||[];
-
-    btn.disabled=false; btn.textContent='Generate Report';
-
-    const total=allPlots.length;
-    const complete=allPlots.filter(p=>p.status==='Complete').length;
-    const snagging=allPlots.filter(p=>p.status==='Snagging').length;
-    const installed=allPlots.filter(p=>p.status==='Installed').length;
-    const inProgress=allPlots.filter(p=>!['Complete','Measured'].includes(p.status)).length;
-    const pct=total===0?0:Math.round((complete/total)*100);
-
-    const byStatus = {};
-    STATUSES.forEach(s=>{ byStatus[s]=allPlots.filter(p=>p.status===s); });
-
-    const today=new Date(); today.setHours(0,0,0,0);
-    const upcoming=allPlots.filter(p=>p.install_date&&p.status!=='Complete'&&new Date(p.install_date)>=today)
-      .sort((a,b)=>new Date(a.install_date)-new Date(b.install_date)).slice(0,10);
-
-    const snaggingPlots=byStatus['Snagging'];
-    const openSnags=snaggingPlots.filter(p=>!p.snag_resolved_at);
-    const resolvedSnags=snaggingPlots.filter(p=>p.snag_resolved_at);
-
-    function plotRows(ps, showProduct=true) {
-      if (!ps.length) return `<div class="empty-section">None</div>`;
-      return `<div class="plot-row plot-row-header"><div>Plot</div><div>${showProduct?'Product / Notes':'Notes'}</div><div>Status</div><div>Install Date</div></div>`+
-        ps.map(p=>`<div class="plot-row">
-          <div class="plot-num-r">Plot ${esc(p.number)}</div>
-          <div>
-            ${p.product_type?`<div style="font-size:12px;font-weight:500">${esc(p.product_type)}</div>`:''}
-            ${p.notes?`<div class="plot-notes-r has-note">${esc(p.notes.slice(0,80))}${p.notes.length>80?'…':''}</div>`:''}
-            ${p.defect_category?`<div class="defect-tag">${esc(p.defect_category)}</div>`:''}
-            ${p.snag_resolved_at?`<div class="resolved-flag">✓ Resolved ${fmtDate(p.snag_resolved_at)}</div>`:''}
-          </div>
-          <div>${badgeHtml(p.status)}</div>
-          <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted)">${fmtDate(p.install_date)}</div>
-        </div>`).join('');
+    function plotRows(arr){
+      if(!arr.length)return'<tr><td colspan="5" style="color:var(--muted);font-style:italic;padding:12px">None</td></tr>';
+      return arr.map(p=>`
+        <tr>
+          <td><strong>Plot ${esc(p.number)}</strong></td>
+          <td><span class="status-dot" style="background:${STATUS_COLORS[p.status]||'#888'}"></span>${esc(p.status)}</td>
+          <td>${esc(p.product_type||'—')}</td>
+          <td>${p.install_date?formatDate(p.install_date):'—'}</td>
+          <td>${esc(p.notes||'—')}</td>
+        </tr>`).join('');
     }
 
-    const html = `
-      <div class="report-header">
-        <div class="report-title">${esc(devName)} — ${esc(siteName)}</div>
-        <div class="report-meta">Installation Progress Report · Scotia Windows &amp; Doors</div>
-        <div class="report-date">Generated: ${new Date().toLocaleString('en-GB',{day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
-      </div>
+    const byStatus={};
+    STATUSES.forEach(s=>{byStatus[s]=(plots||[]).filter(p=>p.status===s)});
+    const resolvedSnags=(plots||[]).filter(p=>p.snag_resolved_at);
 
-      <div class="report-stats">
-        <div class="report-stat"><div class="rs-label">Total Plots</div><div class="rs-value rs-total">${total}</div></div>
-        <div class="report-stat"><div class="rs-label">Complete</div><div class="rs-value rs-complete">${complete}</div></div>
-        <div class="report-stat"><div class="rs-label">Installed</div><div class="rs-value rs-progress">${installed}</div></div>
-        <div class="report-stat"><div class="rs-label">Snagging</div><div class="rs-value rs-snagging">${snagging}</div></div>
-        <div class="report-stat"><div class="rs-label">In Progress</div><div class="rs-value rs-progress">${inProgress}</div></div>
-      </div>
-
-      <div class="progress-section-report">
-        <div class="progress-label-row">
-          <span class="progress-label-text">Overall Completion</span>
-          <span class="progress-pct-text">${pct}%</span>
+    const html=`
+      <div class="report-card">
+        <div class="report-title">${esc(dev?.name||'')} — ${esc(site?.name||'')}</div>
+        <div class="report-sub">Generated ${new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</div>
+        <div class="progress-bar-wrap">
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:8px">
+            <span>${complete} of ${total} plots complete</span><span style="font-weight:600;color:var(--complete)">${pct}%</span>
+          </div>
+          <div class="progress-bar">
+            ${STATUSES.filter(s=>counts[s]>0).map(s=>`<div class="progress-segment" style="width:${(counts[s]/total)*100}%;background:${STATUS_COLORS[s]}"></div>`).join('')}
+          </div>
+          <div class="progress-legend">
+            ${STATUSES.filter(s=>counts[s]>0).map(s=>`<div class="legend-item"><div class="legend-dot" style="background:${STATUS_COLORS[s]}"></div>${s} (${counts[s]})</div>`).join('')}
+          </div>
         </div>
-        <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
       </div>
 
-      ${openSnags.length>0?`
-      <div class="report-section">
-        <div class="section-title">⚠ Outstanding Snagging <span class="section-count">${openSnags.length} open</span></div>
-        ${plotRows(openSnags)}
+      ${upcoming.length?`
+      <div class="report-card report-section">
+        <div class="section-title">📅 Upcoming Installations (next 7 days) <span class="section-count">${upcoming.length}</span></div>
+        <table class="plot-table"><thead><tr><th>Plot</th><th>Status</th><th>Product</th><th>Date</th><th>Notes</th></tr></thead>
+        <tbody>${plotRows(upcoming)}</tbody></table>
       </div>`:''}
 
-      ${upcoming.length>0?`
-      <div class="report-section">
-        <div class="section-title">📅 Upcoming Installations <span class="section-count">${upcoming.length} scheduled</span></div>
-        ${plotRows(upcoming)}
+      ${activSnags.length?`
+      <div class="report-card report-section">
+        <div class="section-title">🔧 Active Snagging <span class="section-count">${activSnags.length}</span></div>
+        <table class="plot-table"><thead><tr><th>Plot</th><th>Status</th><th>Product</th><th>Date</th><th>Notes</th></tr></thead>
+        <tbody>${plotRows(activSnags)}</tbody></table>
       </div>`:''}
 
-      ${STATUSES.filter(s=>s!=='Snagging').map(s=>byStatus[s].length>0?`
-      <div class="report-section">
-        <div class="section-title">${badgeHtml(s)} ${s} <span class="section-count">${byStatus[s].length} plot${byStatus[s].length!==1?'s':''}</span></div>
-        ${plotRows(byStatus[s])}
+      ${pendingDel.length?`
+      <div class="report-card report-section">
+        <div class="section-title">📦 Pending Deliveries <span class="section-count">${pendingDel.length}</span></div>
+        <table class="plot-table"><thead><tr><th>Item</th><th>Status</th><th>Expected</th><th>Notes</th></tr></thead>
+        <tbody>${pendingDel.map(d=>`<tr><td>${esc(d.item)}</td><td>${esc(d.status)}</td><td>${d.expected_date?formatDate(d.expected_date):'—'}</td><td>${esc(d.notes||'—')}</td></tr>`).join('')}</tbody></table>
+      </div>`:''}
+
+      ${STATUSES.map(s=>byStatus[s]?.length?`
+      <div class="report-card report-section">
+        <div class="section-title"><span style="display:inline-flex;align-items:center;gap:6px"><span class="status-dot" style="background:${STATUS_COLORS[s]};width:10px;height:10px;border-radius:50%;display:inline-block"></span>${s}</span><span class="section-count">${byStatus[s].length}</span></div>
+        <table class="plot-table"><thead><tr><th>Plot</th><th>Status</th><th>Product</th><th>Date</th><th>Notes</th></tr></thead>
+        <tbody>${plotRows(byStatus[s])}</tbody></table>
       </div>`:'').join('')}
 
-      ${resolvedSnags.length>0?`
-      <div class="report-section">
-        <div class="section-title">✓ Resolved Snagging <span class="section-count">${resolvedSnags.length} resolved</span></div>
-        ${plotRows(resolvedSnags)}
+      ${resolvedSnags.length?`
+      <div class="report-card report-section">
+        <div class="section-title">✓ Resolved Snagging <span class="section-count">${resolvedSnags.length}</span></div>
+        <table class="plot-table"><thead><tr><th>Plot</th><th>Status</th><th>Product</th><th>Resolved</th><th>Notes</th></tr></thead>
+        <tbody>${resolvedSnags.map(p=>`<tr><td><strong>Plot ${esc(p.number)}</strong></td><td>${esc(p.status)}</td><td>${esc(p.product_type||'—')}</td><td>${p.snag_resolved_at?formatDate(p.snag_resolved_at.split('T')[0]):'—'}</td><td>${esc(p.notes||'—')}</td></tr>`).join('')}</tbody></table>
       </div>`:''}
     `;
 
-    document.getElementById('report-content').innerHTML=html;
+    document.getElementById('report-placeholder').style.display='none';
+    document.getElementById('report-output').innerHTML=html;
     document.getElementById('report-output').style.display='block';
     document.getElementById('btn-print').style.display='';
-    document.getElementById('report-output').scrollIntoView({ behavior:'smooth' });
+    document.getElementById('report-output').scrollIntoView({behavior:'smooth'});
   }
+
+  function formatDate(d){if(!d)return'';return new Date(d+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}
+  function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 
   init();
 </script>
