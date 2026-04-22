@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Plot Tracker — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg:       #0b0d14;
+      --surface:  #13151f;
+      --surface2: #191c2a;
+      --surface3: #1f2235;
+      --border:   #252940;
+      --border2:  #2e3350;
+      --text:     #e8eaf2;
+      --muted:    #5a6080;
+      --muted2:   #7880a0;
+      --accent:   #4f7ef7;
+      --accent2:  #7c9ff8;
+
+      /* Department colours */
+      --est:   #f7954f;   /* Estimate  — amber */
+      --prod:  #4fc8f7;   /* Production — cyan */
+      --inst:  #7c4ff7;   /* Install   — purple */
+      --care:  #4ff7a0;   /* Care      — green */
+      --dir:   #f74f95;   /* Director  — rose */
+      --sys:   #f7f74f;   /* System    — yellow */
+
+      --green:  #3db87a;
+      --red:    #e05252;
+      --amber:  #c48a2f;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Background texture ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 20% 10%, rgba(79,126,247,.07) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(124,79,247,.06) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Header ── */
+    header {
+      position: sticky; top: 0; z-index: 200;
+      background: rgba(11,13,20,.9);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 28px;
+    }
+
+    .logo {
+      display: flex; align-items: center; gap: 10px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700; font-size: 16px; letter-spacing: -.3px;
+    }
+
+    .logo-mark {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--accent), var(--inst));
+      border-radius: 8px;
+      display: grid; place-items: center;
+      font-size: 14px;
+    }
+
+    .header-right {
+      display: flex; align-items: center; gap: 12px;
+    }
+
+    .user-chip {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 5px 12px 5px 6px;
+      font-size: 13px;
+    }
+
+    .avatar {
+      width: 24px; height: 24px; border-radius: 50%;
+      display: grid; place-items: center;
+      font-size: 10px; font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .role-pill {
+      font-size: 10px; font-weight: 600;
+      padding: 2px 8px; border-radius: 10px;
+      letter-spacing: .3px; text-transform: uppercase;
+    }
+
+    .btn-sm {
+      padding: 6px 14px; border-radius: 6px;
+      font-size: 12px; font-weight: 500;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer; transition: all .15s;
+      background: transparent;
+      border: 1px solid var(--border2);
+      color: var(--muted2);
+    }
+    .btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Main layout ── */
+    main {
+      position: relative; z-index: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 36px 24px 60px;
+    }
+
+    /* ── Welcome banner ── */
+    .welcome {
+      margin-bottom: 36px;
+    }
+
+    .welcome-greeting {
+      font-family: 'Syne', sans-serif;
+      font-size: 28px; font-weight: 700;
+      letter-spacing: -.5px;
+      margin-bottom: 6px;
+    }
+
+    .welcome-sub {
+      font-size: 14px; color: var(--muted2);
+    }
+
+    /* ── Stats row ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-bottom: 36px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--dept-color, var(--accent));
+    }
+
+    .stat-label {
+      font-size: 11px; font-weight: 500;
+      color: var(--muted); text-transform: uppercase;
+      letter-spacing: .5px; margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-family: 'Syne', sans-serif;
+      font-size: 30px; font-weight: 700;
+      letter-spacing: -1px;
+    }
+
+    .stat-sub {
+      font-size: 11px; color: var(--muted2);
+      margin-top: 4px;
+    }
+
+    /* ── Department cards grid ── */
+    .dept-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .dept-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      cursor: pointer;
+      transition: all .2s;
+      position: relative;
+      overflow: hidden;
+      text-decoration: none;
+      display: block;
+    }
+
+    .dept-card:hover {
+      border-color: var(--dept-color);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(0,0,0,.3);
+    }
+
+    .dept-card.locked {
+      opacity: .4;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .dept-card.read-only {
+      opacity: .75;
+    }
+
+    .dept-card.read-only::after {
+      content: 'Read only';
+      position: absolute;
+      top: 12px; right: 12px;
+      font-size: 9px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .5px;
+      color: var(--muted);
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2px 6px;
+    }
+
+    .dept-glow {
+      position: absolute;
+      top: -40px; right: -40px;
+      width: 120px; height: 120px;
+      border-radius: 50%;
+      background: var(--dept-color);
+      opacity: .06;
+      filter: blur(30px);
+      pointer-events: none;
+    }
+
+    .dept-icon {
+      width: 44px; height: 44px;
+      border-radius: 10px;
+      background: color-mix(in srgb, var(--dept-color) 15%, transparent);
+      border: 1px solid color-mix(in srgb, var(--dept-color) 30%, transparent);
+      display: grid; place-items: center;
+      font-size: 20px;
+      margin-bottom: 16px;
+    }
+
+    .dept-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 15px; font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .dept-desc {
+      font-size: 12px; color: var(--muted2);
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+
+    .dept-stats {
+      display: flex; gap: 16px;
+    }
+
+    .dept-stat {
+      display: flex; flex-direction: column;
+    }
+
+    .dept-stat-val {
+      font-family: 'DM Mono', monospace;
+      font-size: 18px; font-weight: 500;
+      color: var(--dept-color);
+    }
+
+    .dept-stat-lbl {
+      font-size: 10px; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .4px;
+    }
+
+    .dept-arrow {
+      position: absolute;
+      bottom: 20px; right: 20px;
+      color: var(--muted);
+      font-size: 16px;
+      transition: transform .2s, color .2s;
+    }
+
+    .dept-card:hover .dept-arrow {
+      transform: translateX(4px);
+      color: var(--dept-color);
+    }
+
+    /* ── Recent activity ── */
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 14px; font-weight: 600;
+      letter-spacing: -.2px;
+      margin-bottom: 14px;
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .activity-list {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .activity-item {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+
+    .activity-item:last-child { border-bottom: none; }
+
+    .activity-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      margin-top: 4px;
+      flex-shrink: 0;
+    }
+
+    .activity-body { flex: 1; }
+    .activity-action { color: var(--text); line-height: 1.4; }
+    .activity-meta { color: var(--muted); font-size: 11px; margin-top: 2px; }
+
+    .activity-empty {
+      padding: 32px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    /* ── Admin panel ── */
+    .admin-panel {
+      margin-top: 32px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .admin-panel-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    .admin-panel-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 13px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .5px;
+      color: var(--sys);
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    .user-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .user-table th {
+      font-size: 10px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .5px;
+      color: var(--muted);
+      padding: 10px 20px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+    }
+
+    .user-table td {
+      padding: 12px 20px;
+      font-size: 13px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .user-table tr:last-child td { border-bottom: none; }
+    .user-table tr:hover td { background: var(--surface2); }
+
+    .role-badge-table {
+      font-size: 10px; font-weight: 600;
+      padding: 3px 8px; border-radius: 5px;
+      text-transform: uppercase; letter-spacing: .3px;
+      display: inline-block;
+    }
+
+    .btn-role-edit {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 5px;
+      border: 1px solid var(--border2);
+      background: transparent;
+      color: var(--muted2);
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: all .15s;
+    }
+    .btn-role-edit:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0; z-index: 500;
+      background: rgba(0,0,0,.6);
+      backdrop-filter: blur(4px);
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 16px;
+      padding: 28px;
+      width: 420px;
+      max-width: calc(100vw - 40px);
+    }
+
+    .modal-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 16px; font-weight: 700;
+      margin-bottom: 20px;
+    }
+
+    .form-group { margin-bottom: 16px; }
+
+    .form-label {
+      display: block;
+      font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .4px;
+      color: var(--muted2);
+      margin-bottom: 6px;
+    }
+
+    .form-select, .form-input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      padding: 9px 12px;
+      transition: border .15s;
+    }
+    .form-select:focus, .form-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .modal-btns {
+      display: flex; gap: 10px; justify-content: flex-end;
+      margin-top: 24px;
+    }
+
+    .btn-cancel {
+      padding: 8px 16px; border-radius: 7px;
+      font-size: 13px; font-weight: 500;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer; background: transparent;
+      border: 1px solid var(--border2); color: var(--muted2);
+    }
+
+    .btn-confirm {
+      padding: 8px 18px; border-radius: 7px;
+      font-size: 13px; font-weight: 600;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      background: var(--accent);
+      border: 1px solid transparent;
+      color: #fff;
+      transition: opacity .15s;
+    }
+    .btn-confirm:hover { opacity: .85; }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed; bottom: 24px; left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      padding: 10px 20px;
+      font-size: 13px;
+      transition: transform .25s;
+      z-index: 900;
+      white-space: nowrap;
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* ── Loading ── */
+    .loading {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 200px;
+      color: var(--muted);
+      font-size: 13px;
+      gap: 10px;
+    }
+
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid var(--border2);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .dept-grid { grid-template-columns: 1fr; }
+      main { padding: 24px 16px 48px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark">🏗</div>
+    Plot Tracker
+  </div>
+  <div class="header-right">
+    <div class="user-chip" id="user-chip">
+      <div class="avatar" id="user-avatar" style="background:#4f7ef7">?</div>
+      <span id="user-name">Loading…</span>
+    </div>
+    <span class="role-pill" id="role-pill">—</span>
+    <button class="btn-sm" onclick="signOut()">Sign out</button>
+  </div>
+</header>
+
+<main>
+  <div id="loading" class="loading"><div class="spinner"></div> Loading dashboard…</div>
+  <div id="dashboard" style="display:none">
+
+    <!-- Welcome -->
+    <div class="welcome">
+      <div class="welcome-greeting" id="welcome-greeting">Good morning</div>
+      <div class="welcome-sub" id="welcome-sub">Here's your overview for today</div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row" id="stats-row">
+      <!-- populated by JS -->
+    </div>
+
+    <!-- Department cards -->
+    <div class="section-title">Departments</div>
+    <div class="dept-grid" id="dept-grid">
+      <!-- populated by JS -->
+    </div>
+
+    <!-- Recent activity -->
+    <div class="section-title">Recent Activity</div>
+    <div class="activity-list" id="activity-list">
+      <div class="activity-empty">Loading activity…</div>
+    </div>
+
+    <!-- Admin panel — system_admin only -->
+    <div id="admin-panel" class="admin-panel" style="display:none">
+      <div class="admin-panel-header">
+        <div class="admin-panel-title">⚡ User Management</div>
+        <button class="btn-sm" onclick="openInviteModal()">+ Invite User</button>
+      </div>
+      <div id="user-table-wrap">
+        <div class="loading" style="min-height:100px"><div class="spinner"></div> Loading users…</div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- Role edit modal -->
+<div class="modal-overlay" id="role-modal">
+  <div class="modal">
+    <div class="modal-title">Edit User Role</div>
+    <div class="form-group">
+      <label class="form-label">User</label>
+      <div id="modal-user-email" style="font-size:13px; color:var(--muted2); padding:4px 0;"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Role</label>
+      <select class="form-select" id="modal-role">
+        <option value="director">Director — full access all departments</option>
+        <option value="estimate_head">Estimate Head — full estimate dept</option>
+        <option value="estimate_user">Estimate User — add/edit only</option>
+        <option value="production_head">Production Head — full production dept</option>
+        <option value="production_user">Production User — add/edit only</option>
+        <option value="installation_head">Installation Head — full install dept</option>
+        <option value="installation_user">Installation User — add/edit only</option>
+        <option value="care_head">Customer Care Head — full care dept</option>
+        <option value="care_user">Customer Care User — add/edit only</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Display Name</label>
+      <input class="form-input" id="modal-display-name" placeholder="e.g. Site Manager" />
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-confirm" onclick="saveRole()">Save Role</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+  const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
+  const { createClient } = supabase;
+  const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ── Role config ──────────────────────────────────────────
+  const ROLE_CONFIG = {
+    system_admin:      { label:'System Admin',      color:'var(--sys)',  dept:'system'       },
+    director:          { label:'Director',           color:'var(--dir)',  dept:'director'     },
+    estimate_head:     { label:'Estimate Head',      color:'var(--est)',  dept:'estimate'     },
+    estimate_user:     { label:'Estimate User',      color:'var(--est)',  dept:'estimate'     },
+    production_head:   { label:'Production Head',    color:'var(--prod)', dept:'production'   },
+    production_user:   { label:'Production User',    color:'var(--prod)', dept:'production'   },
+    installation_head: { label:'Install Head',       color:'var(--inst)', dept:'installation' },
+    installation_user: { label:'Install User',       color:'var(--inst)', dept:'installation' },
+    care_head:         { label:'Care Head',          color:'var(--care)', dept:'care'         },
+    care_user:         { label:'Care User',          color:'var(--care)', dept:'care'         },
+  };
+
+  // Department card definitions
+  const DEPTS = [
+    {
+      id: 'estimate',
+      name: 'Estimating',
+      icon: '📋',
+      desc: 'Manage enquiries, build quotes, track approvals',
+      color: 'var(--est)',
+      url: 'estimate.html',
+      allowedDepts: ['estimate'],
+      stats: [
+        { key: 'open_enquiries',  label: 'Open' },
+        { key: 'quotes_pending',  label: 'Pending' },
+      ]
+    },
+    {
+      id: 'production',
+      name: 'Production',
+      icon: '🏭',
+      desc: 'Works orders, ordering, delivery tracking',
+      color: 'var(--prod)',
+      url: 'production.html',
+      allowedDepts: ['production'],
+      stats: [
+        { key: 'active_orders',   label: 'Active' },
+        { key: 'items_due',       label: 'Due Soon' },
+      ]
+    },
+    {
+      id: 'installation',
+      name: 'Installation',
+      icon: '🔧',
+      desc: 'Plot status, scheduling, snagging, photos',
+      color: 'var(--inst)',
+      url: 'index.html',
+      allowedDepts: ['installation'],
+      stats: [
+        { key: 'plots_active',    label: 'Active' },
+        { key: 'plots_complete',  label: 'Done' },
+      ]
+    },
+    {
+      id: 'care',
+      name: 'Customer Care',
+      icon: '💬',
+      desc: 'Handovers, defects, warranties, sign-off',
+      color: 'var(--care)',
+      url: 'care.html',
+      allowedDepts: ['care'],
+      stats: [
+        { key: 'open_defects',    label: 'Open Defects' },
+        { key: 'pending_handover',label: 'Handovers' },
+      ]
+    },
+  ];
+
+  // ── State ────────────────────────────────────────────────
+  let currentUser = null;
+  let userRole    = null;
+  let userDept    = null;
+  let isHead      = false;
+  let deptStats   = {};
+  let allUsers    = [];
+  let editingUserId = null;
+  let toastTimer  = null;
+
+  // ── Init ─────────────────────────────────────────────────
+  async function init() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { window.location.href = 'login.html'; return; }
+
+    currentUser = session.user;
+
+    // Load role
+    const { data: roleData } = await sb.from('user_roles')
+      .select('role, department, display_name, is_head')
+      .eq('user_id', currentUser.id)
+      .single()
+      .catch(() => ({ data: null }));
+
+    userRole = roleData?.role    || 'installation_user';
+    userDept = roleData?.department || 'installation';
+    isHead   = roleData?.is_head || false;
+
+    const rc = ROLE_CONFIG[userRole] || ROLE_CONFIG.installation_user;
+    const displayName = roleData?.display_name ||
+      currentUser.user_metadata?.full_name || currentUser.email;
+    const initials = displayName.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+
+    // Header
+    document.getElementById('user-name').textContent = displayName;
+    document.getElementById('user-avatar').textContent = initials;
+    document.getElementById('user-avatar').style.background = rc.color;
+
+    const pill = document.getElementById('role-pill');
+    pill.textContent = rc.label;
+    pill.style.background = rc.color + '22';
+    pill.style.color = rc.color;
+
+    // Welcome
+    const hour = new Date().getHours();
+    const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+    const firstName = displayName.split(' ')[0];
+    document.getElementById('welcome-greeting').textContent = `${greeting}, ${firstName}`;
+    document.getElementById('welcome-sub').textContent =
+      `You're logged in as ${rc.label} · ${new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})}`;
+
+    // Load stats and render
+    await loadStats();
+    renderStats();
+    renderDeptCards();
+    await loadActivity();
+
+    // Admin panel
+    if (userRole === 'system_admin') {
+      document.getElementById('admin-panel').style.display = '';
+      await loadUsers();
+    }
+
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('dashboard').style.display = '';
+
+    // Log login event
+    await sb.from('workflow_audit').insert({
+      record_type: 'session',
+      record_id: currentUser.id,
+      action: 'Dashboard accessed',
+      user_email: currentUser.email
+    }).catch(() => {});
+  }
+
+  // ── Load stats ───────────────────────────────────────────
+  async function loadStats() {
+    const [enquiries, quotes, workOrders, woItems, plots, defects, handovers] = await Promise.all([
+      sb.from('enquiries').select('status', { count:'exact', head:false }),
+      sb.from('quotes').select('status', { count:'exact', head:false }).eq('is_current', true),
+      sb.from('works_orders').select('status', { count:'exact', head:false }),
+      sb.from('works_order_items').select('status', { count:'exact', head:false }),
+      sb.from('plots').select('status', { count:'exact', head:false }),
+      sb.from('defects').select('status', { count:'exact', head:false }),
+      sb.from('handovers').select('status', { count:'exact', head:false }),
+    ]);
+
+    const e = enquiries.data || [];
+    const q = quotes.data || [];
+    const w = workOrders.data || [];
+    const wi = woItems.data || [];
+    const p = plots.data || [];
+    const d = defects.data || [];
+    const h = handovers.data || [];
+
+    deptStats = {
+      open_enquiries:  e.filter(x => !['Won','Lost'].includes(x.status)).length,
+      quotes_pending:  q.filter(x => x.status === 'Sent').length,
+      active_orders:   w.filter(x => !['Complete','Cancelled'].includes(x.status)).length,
+      items_due:       wi.filter(x => x.status === 'On Order').length,
+      plots_active:    p.filter(x => !['Complete'].includes(x.status)).length,
+      plots_complete:  p.filter(x => x.status === 'Complete').length,
+      open_defects:    d.filter(x => ['Open','In Progress'].includes(x.status)).length,
+      pending_handover:h.filter(x => x.status !== 'Complete').length,
+    };
+  }
+
+  // ── Render stats row ─────────────────────────────────────
+  function renderStats() {
+    const isGlobal = ['system_admin','director'].includes(userRole);
+    const stats = isGlobal ? [
+      { label:'Open Enquiries', value: deptStats.open_enquiries, color:'var(--est)' },
+      { label:'Active Orders',  value: deptStats.active_orders,  color:'var(--prod)' },
+      { label:'Active Plots',   value: deptStats.plots_active,   color:'var(--inst)' },
+      { label:'Open Defects',   value: deptStats.open_defects,   color:'var(--care)' },
+    ] : userDept === 'estimate' ? [
+      { label:'Open Enquiries', value: deptStats.open_enquiries, color:'var(--est)' },
+      { label:'Quotes Pending', value: deptStats.quotes_pending, color:'var(--est)' },
+    ] : userDept === 'production' ? [
+      { label:'Active Orders',  value: deptStats.active_orders,  color:'var(--prod)' },
+      { label:'Items On Order', value: deptStats.items_due,      color:'var(--prod)' },
+    ] : userDept === 'installation' ? [
+      { label:'Active Plots',   value: deptStats.plots_active,   color:'var(--inst)' },
+      { label:'Complete Plots', value: deptStats.plots_complete, color:'var(--inst)' },
+    ] : [
+      { label:'Open Defects',   value: deptStats.open_defects,   color:'var(--care)' },
+      { label:'Pending Handovers', value:deptStats.pending_handover, color:'var(--care)' },
+    ];
+
+    document.getElementById('stats-row').innerHTML = stats.map(s => `
+      <div class="stat-card" style="--dept-color:${s.color}">
+        <div class="stat-label">${s.label}</div>
+        <div class="stat-value" style="color:${s.color}">${s.value ?? '—'}</div>
+      </div>
+    `).join('');
+  }
+
+  // ── Render department cards ──────────────────────────────
+  function renderDeptCards() {
+    const isGlobal = ['system_admin','director'].includes(userRole);
+
+    document.getElementById('dept-grid').innerHTML = DEPTS.map(dept => {
+      const isOwn     = dept.allowedDepts.includes(userDept);
+      const canAccess = isGlobal || isOwn;
+      const readOnly  = canAccess && !isOwn && !isGlobal;
+
+      const s1 = deptStats[dept.stats[0].key] ?? '—';
+      const s2 = deptStats[dept.stats[1].key] ?? '—';
+
+      return `
+        <a href="${canAccess ? dept.url : '#'}"
+           class="dept-card ${!canAccess ? 'locked' : readOnly ? 'read-only' : ''}"
+           style="--dept-color:${dept.color}">
+          <div class="dept-glow"></div>
+          <div class="dept-icon">${dept.icon}</div>
+          <div class="dept-name">${dept.name}</div>
+          <div class="dept-desc">${dept.desc}</div>
+          <div class="dept-stats">
+            <div class="dept-stat">
+              <span class="dept-stat-val">${s1}</span>
+              <span class="dept-stat-lbl">${dept.stats[0].label}</span>
+            </div>
+            <div class="dept-stat">
+              <span class="dept-stat-val">${s2}</span>
+              <span class="dept-stat-lbl">${dept.stats[1].label}</span>
+            </div>
+          </div>
+          <span class="dept-arrow">→</span>
+        </a>
+      `;
+    }).join('');
+  }
+
+  // ── Load activity ────────────────────────────────────────
+  async function loadActivity() {
+    const deptColors = {
+      session: 'var(--accent)',
+      enquiry: 'var(--est)',
+      quote: 'var(--est)',
+      works_order: 'var(--prod)',
+      works_order_item: 'var(--prod)',
+      handover: 'var(--care)',
+      defect: 'var(--care)',
+    };
+
+    // Load from both audit tables
+    const [wfAudit, plotAudit] = await Promise.all([
+      sb.from('workflow_audit')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(8),
+      sb.from('audit_log')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(8),
+    ]);
+
+    const wfItems = (wfAudit.data || []).map(x => ({
+      action: x.action,
+      user: x.user_email,
+      time: x.created_at,
+      color: deptColors[x.record_type] || 'var(--muted)',
+    }));
+
+    const plotItems = (plotAudit.data || []).map(x => ({
+      action: x.action,
+      user: x.user_email,
+      time: x.created_at,
+      color: 'var(--inst)',
+    }));
+
+    // Merge and sort
+    const all = [...wfItems, ...plotItems]
+      .sort((a,b) => new Date(b.time) - new Date(a.time))
+      .slice(0, 10);
+
+    if (all.length === 0) {
+      document.getElementById('activity-list').innerHTML =
+        '<div class="activity-empty">No activity yet</div>';
+      return;
+    }
+
+    document.getElementById('activity-list').innerHTML = all.map(item => `
+      <div class="activity-item">
+        <div class="activity-dot" style="background:${item.color}"></div>
+        <div class="activity-body">
+          <div class="activity-action">${esc(item.action)}</div>
+          <div class="activity-meta">${esc(item.user)} · ${timeAgo(item.time)}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ── User management (system_admin only) ─────────────────
+  async function loadUsers() {
+    const { data: roles } = await sb.from('user_roles')
+      .select('user_id, role, department, display_name, is_head')
+      .order('role');
+
+    if (!roles) return;
+
+    // Get emails from auth — we can only see our own without service role
+    // So we show what we have and note that emails come from auth
+    const html = `
+      <table class="user-table">
+        <thead>
+          <tr>
+            <th>Display Name</th>
+            <th>Role</th>
+            <th>Department</th>
+            <th>Head</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          ${roles.map(r => {
+            const rc = ROLE_CONFIG[r.role] || {};
+            return `
+              <tr>
+                <td>${esc(r.display_name || '—')}</td>
+                <td>
+                  <span class="role-badge-table"
+                    style="background:${(rc.color||'var(--muted)')+'22'};color:${rc.color||'var(--muted)'}">
+                    ${esc(rc.label || r.role)}
+                  </span>
+                </td>
+                <td style="color:var(--muted2)">${esc(r.department || '—')}</td>
+                <td style="color:var(--muted2)">${r.is_head ? '✓' : '—'}</td>
+                <td>
+                  ${r.role !== 'system_admin' ? `
+                    <button class="btn-role-edit"
+                      onclick="openRoleModal('${r.user_id}','${esc(r.display_name)}','${r.role}')">
+                      Edit
+                    </button>
+                  ` : '<span style="color:var(--muted);font-size:11px">Protected</span>'}
+                </td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    `;
+
+    document.getElementById('user-table-wrap').innerHTML = html;
+    allUsers = roles;
+  }
+
+  function openRoleModal(userId, displayName, currentRole) {
+    editingUserId = userId;
+    document.getElementById('modal-user-email').textContent = displayName || userId;
+    document.getElementById('modal-role').value = currentRole;
+    document.getElementById('modal-display-name').value = displayName || '';
+    document.getElementById('role-modal').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('role-modal').classList.remove('open');
+    editingUserId = null;
+  }
+
+  async function saveRole() {
+    if (!editingUserId) return;
+    const newRole = document.getElementById('modal-role').value;
+    const displayName = document.getElementById('modal-display-name').value.trim();
+    const rc = ROLE_CONFIG[newRole];
+
+    const dept = newRole.replace('_head','').replace('_user','');
+    const isH  = newRole.endsWith('_head') || ['system_admin','director'].includes(newRole);
+
+    const { error } = await sb.from('user_roles').update({
+      role: newRole,
+      department: rc?.dept || dept,
+      display_name: displayName,
+      is_head: isH,
+    }).eq('user_id', editingUserId);
+
+    if (error) { toast('Error saving role', true); return; }
+
+    // Audit
+    await sb.from('workflow_audit').insert({
+      record_type: 'user_role',
+      record_id: editingUserId,
+      action: `Role changed to ${rc?.label || newRole}`,
+      new_value: newRole,
+      user_email: currentUser.email,
+    });
+
+    toast('Role updated');
+    closeModal();
+    await loadUsers();
+  }
+
+  function openInviteModal() {
+    toast('Invite user: ask them to register at login.html — then assign their role here');
+  }
+
+  // ── Sign out ─────────────────────────────────────────────
+  async function signOut() {
+    await sb.from('workflow_audit').insert({
+      record_type: 'session',
+      record_id: currentUser.id,
+      action: 'Signed out',
+      user_email: currentUser.email,
+    }).catch(() => {});
+    await sb.auth.signOut();
+    window.location.href = 'login.html';
+  }
+
+  // ── Helpers ──────────────────────────────────────────────
+  function timeAgo(ts) {
+    const diff = Date.now() - new Date(ts).getTime();
+    const m = Math.floor(diff / 60000);
+    if (m < 1)  return 'just now';
+    if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h ago`;
+    return `${Math.floor(h/24)}d ago`;
+  }
+
+  function esc(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function toast(msg, isError=false) {
+    const t = document.getElementById('toast');
+    t.textContent = (isError ? '⚠ ' : '✓ ') + msg;
+    t.style.borderColor = isError ? 'var(--red)' : 'var(--green)';
+    t.style.color = isError ? 'var(--red)' : 'var(--green)';
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  init();
+</script>
+</body>
+</html>
