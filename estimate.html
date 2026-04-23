@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Estimating — Plot Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg:       #0b0d14;
+      --surface:  #13151f;
+      --surface2: #191c2a;
+      --surface3: #1f2235;
+      --border:   #252940;
+      --border2:  #2e3350;
+      --text:     #e8eaf2;
+      --muted:    #5a6080;
+      --muted2:   #7880a0;
+      --accent:   #f7954f;   /* Estimating amber */
+      --accent2:  #f7b87a;
+      --green:    #3db87a;
+      --red:      #e05252;
+      --blue:     #4f8ef7;
+      --purple:   #7c4ff7;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background: radial-gradient(ellipse 70% 40% at 10% 5%, rgba(247,149,79,.06) 0%, transparent 60%);
+    }
+
+    /* ── Header ── */
+    header {
+      position: sticky; top: 0; z-index: 200;
+      background: rgba(11,13,20,.92);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 28px;
+    }
+
+    .logo {
+      display: flex; align-items: center; gap: 10px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700; font-size: 16px;
+    }
+
+    .logo-mark {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--accent), #f74f4f);
+      border-radius: 8px;
+      display: grid; place-items: center;
+      font-size: 15px;
+    }
+
+    .nav-links { display: flex; gap: 4px; }
+    .nav-link {
+      padding: 5px 12px; border-radius: 6px;
+      font-size: 12px; font-weight: 500;
+      color: var(--muted); text-decoration: none;
+      transition: all .15s; border: 1px solid transparent;
+    }
+    .nav-link:hover { color: var(--text); background: var(--surface2); }
+    .nav-link.active { color: var(--accent); border-color: var(--border); }
+
+    .header-right { display: flex; align-items: center; gap: 10px; }
+
+    .user-chip {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 20px; padding: 5px 12px 5px 6px; font-size: 13px;
+    }
+
+    .avatar {
+      width: 24px; height: 24px; border-radius: 50%;
+      display: grid; place-items: center;
+      font-size: 10px; font-weight: 700; flex-shrink: 0;
+      background: var(--accent);
+    }
+
+    .role-pill {
+      font-size: 10px; font-weight: 600;
+      padding: 2px 8px; border-radius: 10px;
+      letter-spacing: .3px; text-transform: uppercase;
+      background: rgba(247,149,79,.15); color: var(--accent);
+    }
+
+    .btn-sm {
+      padding: 6px 14px; border-radius: 6px;
+      font-size: 12px; font-weight: 500;
+      font-family: 'DM Sans', sans-serif; cursor: pointer;
+      background: transparent; border: 1px solid var(--border2); color: var(--muted2);
+      transition: all .15s;
+    }
+    .btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Layout ── */
+    .page {
+      position: relative; z-index: 1;
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      min-height: calc(100vh - 60px);
+    }
+
+    /* ── Left panel — pipeline ── */
+    .pipeline {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column;
+    }
+
+    .pipeline-header {
+      padding: 20px 20px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    .pipeline-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 13px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .5px;
+      color: var(--accent);
+    }
+
+    .btn-new {
+      padding: 6px 14px; border-radius: 7px;
+      font-size: 12px; font-weight: 600;
+      font-family: 'DM Sans', sans-serif; cursor: pointer;
+      background: var(--accent); color: #fff; border: none;
+      transition: opacity .15s;
+    }
+    .btn-new:hover { opacity: .85; }
+    .btn-new:disabled { opacity: .4; cursor: not-allowed; }
+
+    .pipeline-filters {
+      padding: 12px 16px;
+      display: flex; gap: 6px; flex-wrap: wrap;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .filter-chip {
+      padding: 4px 10px; border-radius: 12px;
+      font-size: 11px; font-weight: 500;
+      cursor: pointer; border: 1px solid var(--border);
+      background: transparent; color: var(--muted2);
+      font-family: 'DM Sans', sans-serif; transition: all .15s;
+    }
+    .filter-chip:hover { border-color: var(--accent); color: var(--accent); }
+    .filter-chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    .pipeline-list {
+      flex: 1; overflow-y: auto; padding: 8px;
+    }
+
+    .enquiry-card {
+      padding: 14px 16px; border-radius: 10px;
+      border: 1px solid var(--border);
+      margin-bottom: 6px; cursor: pointer;
+      transition: all .2s; background: var(--surface2);
+    }
+    .enquiry-card:hover { border-color: var(--accent); }
+    .enquiry-card.selected { border-color: var(--accent); background: rgba(247,149,79,.06); }
+
+    .eq-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 6px; }
+    .eq-dev { font-size: 13px; font-weight: 600; }
+    .eq-site { font-size: 11px; color: var(--muted2); margin-top: 1px; }
+
+    .status-pip {
+      font-size: 9px; font-weight: 700;
+      padding: 2px 7px; border-radius: 8px;
+      text-transform: uppercase; letter-spacing: .4px;
+      white-space: nowrap; flex-shrink: 0;
+    }
+
+    .eq-meta { font-size: 11px; color: var(--muted); display: flex; gap: 10px; margin-top: 4px; }
+    .eq-value { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--accent); }
+
+    .pipeline-empty {
+      padding: 40px 20px; text-align: center;
+      color: var(--muted); font-size: 13px;
+    }
+
+    /* ── Right panel — detail ── */
+    .detail {
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+
+    .detail-placeholder {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      color: var(--muted); gap: 12px;
+    }
+
+    .detail-placeholder-icon { font-size: 40px; opacity: .4; }
+
+    .detail-placeholder p {
+      font-size: 13px;
+    }
+
+    /* Detail view */
+    .detail-view { display: none; flex-direction: column; flex: 1; overflow: hidden; }
+    .detail-view.visible { display: flex; }
+
+    .detail-toolbar {
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .detail-heading {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px; font-weight: 700;
+    }
+
+    .detail-sub { font-size: 12px; color: var(--muted2); margin-top: 2px; }
+
+    .toolbar-actions { display: flex; gap: 8px; align-items: center; }
+
+    .btn-action {
+      padding: 7px 16px; border-radius: 7px;
+      font-size: 12px; font-weight: 600;
+      font-family: 'DM Sans', sans-serif; cursor: pointer;
+      border: 1px solid var(--border2); background: transparent;
+      color: var(--muted2); transition: all .15s;
+    }
+    .btn-action:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-action.primary { background: var(--accent); color: #fff; border-color: transparent; }
+    .btn-action.primary:hover { opacity: .85; }
+    .btn-action.danger { color: var(--red); }
+    .btn-action.danger:hover { border-color: var(--red); }
+    .btn-action.success { background: var(--green); color: #fff; border-color: transparent; }
+    .btn-action.success:hover { opacity: .85; }
+
+    .detail-body { flex: 1; overflow-y: auto; padding: 24px; }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 2px; margin-bottom: 24px; border-bottom: 1px solid var(--border); }
+    .tab {
+      padding: 10px 18px; font-size: 13px; font-weight: 500;
+      cursor: pointer; color: var(--muted2); border: none;
+      background: transparent; font-family: 'DM Sans', sans-serif;
+      border-bottom: 2px solid transparent; margin-bottom: -1px;
+      transition: all .15s;
+    }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* Info grid */
+    .info-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 12px; margin-bottom: 24px;
+    }
+
+    .info-field {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px 16px;
+    }
+
+    .info-label {
+      font-size: 10px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .5px;
+      color: var(--muted); margin-bottom: 4px;
+    }
+
+    .info-value { font-size: 13px; }
+    .info-value.mono { font-family: 'DM Mono', monospace; color: var(--accent); font-size: 16px; }
+    .info-value.muted { color: var(--muted2); }
+
+    /* Quote lines table */
+    .section-head {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 13px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .4px;
+    }
+
+    .quote-table {
+      width: 100%; border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+
+    .quote-table th {
+      font-size: 10px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .5px;
+      color: var(--muted); padding: 8px 12px;
+      text-align: left; border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+    }
+
+    .quote-table td {
+      padding: 10px 12px; font-size: 13px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .quote-table tr:last-child td { border-bottom: none; }
+    .quote-table tr:hover td { background: var(--surface2); }
+
+    .quote-table td.mono { font-family: 'DM Mono', monospace; }
+    .quote-table td.right { text-align: right; }
+
+    .quote-totals {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 16px 20px;
+      display: flex; justify-content: flex-end; gap: 32px;
+      margin-bottom: 20px;
+    }
+
+    .total-item { text-align: right; }
+    .total-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+    .total-value { font-family: 'DM Mono', monospace; font-size: 20px; font-weight: 500; margin-top: 2px; }
+    .total-value.accent { color: var(--accent); }
+    .total-value.green { color: var(--green); }
+
+    /* Status badge colours */
+    .s-New         { background: rgba(90,96,128,.2);  color: #8890b0; }
+    .s-Quoting     { background: rgba(247,149,79,.15); color: var(--accent); }
+    .s-Quoted      { background: rgba(79,142,247,.15); color: var(--blue); }
+    .s-Won         { background: rgba(61,184,122,.15); color: var(--green); }
+    .s-Lost        { background: rgba(224,82,82,.15);  color: var(--red); }
+    .s-On-Hold     { background: rgba(124,79,247,.15); color: var(--purple); }
+
+    /* Modal */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; z-index: 500;
+      background: rgba(0,0,0,.65); backdrop-filter: blur(6px);
+      align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 16px; padding: 28px;
+      width: 100%; max-width: 560px;
+      max-height: 90vh; overflow-y: auto;
+    }
+
+    .modal-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 17px; font-weight: 700;
+      margin-bottom: 20px;
+    }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-group { margin-bottom: 14px; }
+    .form-group.full { grid-column: 1 / -1; }
+
+    .form-label {
+      display: block; font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .4px;
+      color: var(--muted2); margin-bottom: 5px;
+    }
+
+    .form-input, .form-select, .form-textarea {
+      width: 100%; background: var(--surface2);
+      border: 1px solid var(--border2); border-radius: 8px;
+      color: var(--text); font-family: 'DM Sans', sans-serif;
+      font-size: 13px; padding: 9px 12px; transition: border .15s;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      outline: none; border-color: var(--accent);
+    }
+    .form-textarea { min-height: 80px; resize: vertical; }
+
+    .modal-btns {
+      display: flex; gap: 10px; justify-content: flex-end;
+      margin-top: 24px;
+    }
+
+    .btn-cancel {
+      padding: 8px 16px; border-radius: 7px;
+      font-size: 13px; font-weight: 500;
+      font-family: 'DM Sans', sans-serif; cursor: pointer;
+      background: transparent; border: 1px solid var(--border2); color: var(--muted2);
+    }
+
+    .btn-confirm {
+      padding: 8px 20px; border-radius: 7px;
+      font-size: 13px; font-weight: 600;
+      font-family: 'DM Sans', sans-serif; cursor: pointer;
+      background: var(--accent); border: none; color: #fff;
+      transition: opacity .15s;
+    }
+    .btn-confirm:hover { opacity: .85; }
+
+    /* Toast */
+    #toast {
+      position: fixed; bottom: 24px; left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--surface); border: 1px solid var(--border2);
+      border-radius: 10px; padding: 10px 20px; font-size: 13px;
+      transition: transform .25s; z-index: 900; white-space: nowrap;
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* Empty states */
+    .empty-state {
+      padding: 40px; text-align: center; color: var(--muted); font-size: 13px;
+    }
+
+    /* Status select inline */
+    .status-select {
+      background: transparent; border: 1px solid var(--border);
+      border-radius: 6px; color: var(--text);
+      font-family: 'DM Sans', sans-serif; font-size: 12px;
+      padding: 4px 8px; cursor: pointer;
+    }
+    .status-select:focus { outline: none; border-color: var(--accent); }
+
+    /* Notes box */
+    .notes-box {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 16px; font-size: 13px;
+      line-height: 1.6; color: var(--muted2); margin-bottom: 16px;
+      min-height: 60px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .page { grid-template-columns: 1fr; }
+      .pipeline { max-height: 40vh; }
+      .info-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div style="display:flex;align-items:center;gap:16px">
+    <div class="logo">
+      <div class="logo-mark">📋</div>
+      Plot Tracker
+    </div>
+    <nav class="nav-links">
+      <a href="dashboard.html" class="nav-link">Dashboard</a>
+      <a href="estimate.html" class="nav-link active">Estimating</a>
+      <a href="index.html" class="nav-link">Installation</a>
+      <a href="log.html" class="nav-link">Log</a>
+      <a href="report.html" class="nav-link">Report</a>
+    </nav>
+  </div>
+  <div class="header-right">
+    <div class="user-chip">
+      <div class="avatar" id="user-avatar">?</div>
+      <span id="user-name">…</span>
+    </div>
+    <span class="role-pill" id="role-pill">—</span>
+    <button class="btn-sm" onclick="signOut()">Sign out</button>
+  </div>
+</header>
+
+<div class="page">
+
+  <!-- ── Left: Pipeline ── -->
+  <div class="pipeline">
+    <div class="pipeline-header">
+      <div class="pipeline-title">Enquiry Pipeline</div>
+      <button class="btn-new" id="btn-new-enquiry" onclick="openNewEnquiry()">+ New</button>
+    </div>
+    <div class="pipeline-filters">
+      <button class="filter-chip active" onclick="setFilter('')">All</button>
+      <button class="filter-chip" onclick="setFilter('New')">New</button>
+      <button class="filter-chip" onclick="setFilter('Quoting')">Quoting</button>
+      <button class="filter-chip" onclick="setFilter('Quoted')">Quoted</button>
+      <button class="filter-chip" onclick="setFilter('Won')">Won</button>
+      <button class="filter-chip" onclick="setFilter('Lost')">Lost</button>
+    </div>
+    <div class="pipeline-list" id="pipeline-list">
+      <div class="pipeline-empty">Loading enquiries…</div>
+    </div>
+  </div>
+
+  <!-- ── Right: Detail ── -->
+  <div class="detail">
+
+    <div class="detail-placeholder" id="detail-placeholder">
+      <div class="detail-placeholder-icon">📋</div>
+      <p>Select an enquiry to view details</p>
+      <p style="font-size:11px;color:var(--muted)">or click + New to create one</p>
+    </div>
+
+    <div class="detail-view" id="detail-view">
+
+      <div class="detail-toolbar">
+        <div>
+          <div class="detail-heading" id="detail-heading">—</div>
+          <div class="detail-sub" id="detail-sub">—</div>
+        </div>
+        <div class="toolbar-actions">
+          <select class="status-select" id="status-select" onchange="updateEnquiryStatus()">
+            <option value="New">New</option>
+            <option value="Quoting">Quoting</option>
+            <option value="Quoted">Quoted</option>
+            <option value="Won">Won</option>
+            <option value="Lost">Lost</option>
+            <option value="On Hold">On Hold</option>
+          </select>
+          <button class="btn-action" onclick="openEditEnquiry()">✏ Edit</button>
+          <button class="btn-action primary" id="btn-new-quote" onclick="openNewQuote()">+ Quote</button>
+        </div>
+      </div>
+
+      <div class="detail-body">
+
+        <div class="tabs">
+          <button class="tab active" onclick="showTab('overview')">Overview</button>
+          <button class="tab" onclick="showTab('quotes')">Quotes</button>
+          <button class="tab" onclick="showTab('notes')">Notes</button>
+        </div>
+
+        <!-- Overview tab -->
+        <div class="tab-panel active" id="tab-overview">
+          <div class="info-grid" id="info-grid">
+            <!-- populated by JS -->
+          </div>
+        </div>
+
+        <!-- Quotes tab -->
+        <div class="tab-panel" id="tab-quotes">
+          <div id="quotes-panel">
+            <div class="empty-state">No quotes yet — click + Quote to create one</div>
+          </div>
+        </div>
+
+        <!-- Notes tab -->
+        <div class="tab-panel" id="tab-notes">
+          <div class="notes-box" id="notes-box">—</div>
+          <button class="btn-action" onclick="openEditEnquiry()">✏ Edit Notes</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- New / Edit Enquiry Modal -->
+<div class="modal-overlay" id="modal-enquiry">
+  <div class="modal">
+    <div class="modal-title" id="enquiry-modal-title">New Enquiry</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Developer *</label>
+        <select class="form-select" id="eq-developer"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select class="form-select" id="eq-status">
+          <option>New</option><option>Quoting</option><option>Quoted</option>
+          <option>Won</option><option>Lost</option><option>On Hold</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Site / Development Name *</label>
+        <input class="form-input" id="eq-site" placeholder="e.g. Maple Lane Phase 2"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Number of Plots</label>
+        <input class="form-input" id="eq-plots" type="number" placeholder="e.g. 48"/>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Contact Name</label>
+        <input class="form-input" id="eq-contact-name" placeholder="e.g. John Smith"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Contact Email</label>
+        <input class="form-input" id="eq-contact-email" type="email" placeholder="john@barratt.co.uk"/>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Contact Phone</label>
+        <input class="form-input" id="eq-contact-phone" placeholder="07700 000000"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Source</label>
+        <select class="form-select" id="eq-source">
+          <option value="">— Select —</option>
+          <option>Existing Customer</option><option>Referral</option>
+          <option>Developer Direct</option><option>Tender</option><option>Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Enquiry Date</label>
+        <input class="form-input" id="eq-date" type="date"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Quote Required By</label>
+        <input class="form-input" id="eq-deadline" type="date"/>
+      </div>
+    </div>
+    <div class="form-group full">
+      <label class="form-label">Plot Types / Description</label>
+      <input class="form-input" id="eq-plot-types" placeholder="e.g. 32 detached, 18 semi-detached"/>
+    </div>
+    <div class="form-group full">
+      <label class="form-label">Location</label>
+      <input class="form-input" id="eq-location" placeholder="e.g. Livingston, West Lothian"/>
+    </div>
+    <div class="form-group full">
+      <label class="form-label">Notes</label>
+      <textarea class="form-textarea" id="eq-notes" placeholder="Any additional context or requirements…"></textarea>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModals()">Cancel</button>
+      <button class="btn-confirm" onclick="saveEnquiry()">Save Enquiry</button>
+    </div>
+  </div>
+</div>
+
+<!-- New Quote Modal -->
+<div class="modal-overlay" id="modal-quote">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-title">New Quote</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Valid Until</label>
+        <input class="form-input" id="qt-valid" type="date"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Discount %</label>
+        <input class="form-input" id="qt-discount" type="number" min="0" max="100" value="0"/>
+      </div>
+    </div>
+    <div class="form-group full">
+      <label class="form-label">Notes / Terms</label>
+      <textarea class="form-textarea" id="qt-notes" placeholder="Payment terms, exclusions, assumptions…"></textarea>
+    </div>
+
+    <!-- Line items -->
+    <div class="section-head" style="margin-top:8px">
+      <div class="section-title" style="font-size:12px">Quote Lines</div>
+      <button class="btn-action" onclick="addQuoteLine()" style="font-size:11px;padding:5px 10px">+ Add Line</button>
+    </div>
+    <div id="quote-lines-editor" style="margin-bottom:12px">
+      <!-- lines added dynamically -->
+    </div>
+    <div style="text-align:right;font-size:13px;color:var(--muted2);padding:8px 0;border-top:1px solid var(--border)">
+      Total: <span id="qt-total-preview" style="font-family:'DM Mono',monospace;color:var(--accent);font-size:16px;margin-left:8px">£0.00</span>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModals()">Cancel</button>
+      <button class="btn-confirm" onclick="saveQuote()">Save Quote</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+  const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
+  const { createClient } = supabase;
+  const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ── State ────────────────────────────────────────────────
+  let currentUser = null, userRole = 'estimate_user', canWrite = false, canDel = false;
+  let developers = [], enquiries = [], currentEnquiry = null, currentQuotes = [];
+  let filterStatus = '', editingEnquiryId = null;
+  let quoteLines = [], toastTimer = null;
+
+  const PRODUCTS = [
+    'Casement Window','Tilt & Turn Window','Fixed Light Window',
+    'Composite Door','uPVC Door','French Doors','Bifold Doors',
+    'Sliding Patio Doors','Aluminium Window','Aluminium Door',
+    'Roof Lantern','Rooflight','Mixed','Other'
+  ];
+
+  // ── Init ─────────────────────────────────────────────────
+  async function init() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { window.location.href = 'login.html'; return; }
+    currentUser = session.user;
+
+    let roleData = null;
+    try {
+      const { data } = await sb.from('user_roles')
+        .select('role, department, is_head')
+        .eq('user_id', currentUser.id)
+        .single();
+      roleData = data;
+    } catch(_) {}
+
+    userRole  = roleData?.role || 'estimate_user';
+    const dept = roleData?.department || 'estimate';
+    const head  = roleData?.is_head || false;
+
+    canWrite = ['system_admin','director','estimate_head','estimate_user'].includes(userRole);
+    canDel   = ['system_admin','director','estimate_head'].includes(userRole);
+
+    // If not allowed in estimate dept at all — redirect
+    if (!['system_admin','director','estimate_head','estimate_user'].includes(userRole)) {
+      window.location.href = 'dashboard.html';
+      return;
+    }
+
+    const name = currentUser.user_metadata?.full_name || currentUser.email;
+    const initials = name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    document.getElementById('user-avatar').textContent = initials;
+    document.getElementById('user-name').textContent = name;
+    document.getElementById('role-pill').textContent = getRoleLabel();
+    document.getElementById('btn-new-enquiry').disabled = !canWrite;
+
+    await loadDevelopers();
+    await loadEnquiries();
+  }
+
+  function getRoleLabel() {
+    const l = { system_admin:'System Admin', director:'Director', estimate_head:'Estimate Head', estimate_user:'Estimate User' };
+    return l[userRole] || userRole;
+  }
+
+  async function signOut() {
+    await sb.auth.signOut();
+    window.location.href = 'login.html';
+  }
+
+  // ── Load data ────────────────────────────────────────────
+  async function loadDevelopers() {
+    const { data } = await sb.from('developers').select('*').order('name');
+    developers = data || [];
+    const sel = document.getElementById('eq-developer');
+    sel.innerHTML = '<option value="">— Select Developer —</option>' +
+      developers.map(d => `<option value="${d.id}">${esc(d.name)}</option>`).join('');
+  }
+
+  async function loadEnquiries() {
+    const { data } = await sb.from('enquiries')
+      .select('*, developers(name)')
+      .order('enquiry_date', { ascending: false });
+    enquiries = data || [];
+    renderPipeline();
+  }
+
+  // ── Pipeline ─────────────────────────────────────────────
+  function setFilter(status) {
+    filterStatus = status;
+    document.querySelectorAll('.filter-chip').forEach(c => {
+      c.classList.toggle('active', c.textContent === (status || 'All'));
+    });
+    renderPipeline();
+  }
+
+  function renderPipeline() {
+    const filtered = filterStatus
+      ? enquiries.filter(e => e.status === filterStatus)
+      : enquiries;
+
+    const el = document.getElementById('pipeline-list');
+    if (!filtered.length) {
+      el.innerHTML = `<div class="pipeline-empty">${filterStatus ? 'No '+filterStatus+' enquiries' : 'No enquiries yet'}</div>`;
+      return;
+    }
+
+    el.innerHTML = filtered.map(e => `
+      <div class="enquiry-card ${currentEnquiry?.id === e.id ? 'selected' : ''}"
+           onclick="selectEnquiry('${e.id}')">
+        <div class="eq-header">
+          <div>
+            <div class="eq-dev">${esc(e.developers?.name || '—')}</div>
+            <div class="eq-site">${esc(e.site_name || '—')}</div>
+          </div>
+          <span class="status-pip s-${e.status.replace(' ','-')}">${esc(e.status)}</span>
+        </div>
+        <div class="eq-meta">
+          ${e.plot_count ? `<span>${e.plot_count} plots</span>` : ''}
+          <span>${formatDate(e.enquiry_date)}</span>
+          ${e.quote_required_by ? `<span class="eq-value">Due ${formatDate(e.quote_required_by)}</span>` : ''}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ── Select enquiry ───────────────────────────────────────
+  async function selectEnquiry(id) {
+    currentEnquiry = enquiries.find(e => e.id === id);
+    if (!currentEnquiry) return;
+
+    document.getElementById('detail-placeholder').style.display = 'none';
+    document.getElementById('detail-view').classList.add('visible');
+
+    // Update toolbar
+    document.getElementById('detail-heading').textContent =
+      `${currentEnquiry.developers?.name || '—'} — ${currentEnquiry.site_name || '—'}`;
+    document.getElementById('detail-sub').textContent =
+      `${currentEnquiry.plot_count ? currentEnquiry.plot_count + ' plots · ' : ''}Enquiry received ${formatDate(currentEnquiry.enquiry_date)}`;
+    document.getElementById('status-select').value = currentEnquiry.status;
+
+    renderOverview();
+    renderPipeline(); // refresh selected state
+    await loadQuotes();
+  }
+
+  function renderOverview() {
+    const e = currentEnquiry;
+    document.getElementById('info-grid').innerHTML = `
+      <div class="info-field">
+        <div class="info-label">Developer</div>
+        <div class="info-value">${esc(e.developers?.name || '—')}</div>
+      </div>
+      <div class="info-field">
+        <div class="info-label">Site Name</div>
+        <div class="info-value">${esc(e.site_name || '—')}</div>
+      </div>
+      <div class="info-field">
+        <div class="info-label">Plot Count</div>
+        <div class="info-value mono">${e.plot_count || '—'}</div>
+      </div>
+      <div class="info-field">
+        <div class="info-label">Plot Types</div>
+        <div class="info-value muted">${esc(e.plot_types || '—')}</div>
+      </div>
+      <div class="info-field">
+        <div class="info-label">Location</div>
+        <div class="info-value muted">${esc(e.location || '—')}</div>
+      </div>
+      <div class="info-field">
+        <div class="info-label">Source</div>
+        <div class="info-value muted">${esc(e.source || '—')}</div>
+      </div>
+      <div class="info-field">
+        <div class="info-label">Contact</div>
+        <div class="info-value">${esc(e.contact_name || '—')}</div>
+        ${e.contact_email ? `<div class="info-value muted" style="font-size:11px;margin-top:2px">${esc(e.contact_email)}</div>` : ''}
+        ${e.contact_phone ? `<div class="info-value muted" style="font-size:11px">${esc(e.contact_phone)}</div>` : ''}
+      </div>
+      <div class="info-field">
+        <div class="info-label">Dates</div>
+        <div class="info-value muted">Received: ${formatDate(e.enquiry_date)}</div>
+        ${e.quote_required_by ? `<div class="info-value muted" style="font-size:11px;margin-top:2px">Quote by: ${formatDate(e.quote_required_by)}</div>` : ''}
+      </div>
+    `;
+    document.getElementById('notes-box').textContent = e.notes || 'No notes';
+  }
+
+  // ── Status update inline ─────────────────────────────────
+  async function updateEnquiryStatus() {
+    if (!currentEnquiry || !canWrite) return;
+    const newStatus = document.getElementById('status-select').value;
+    const { error } = await sb.from('enquiries').update({
+      status: newStatus, updated_at: new Date().toISOString()
+    }).eq('id', currentEnquiry.id);
+    if (error) { toast('Error updating status', true); return; }
+    await logWorkflow('enquiry', currentEnquiry.id, `Status → ${newStatus}`, currentEnquiry.status, newStatus);
+    currentEnquiry.status = newStatus;
+    enquiries = enquiries.map(e => e.id === currentEnquiry.id ? { ...e, status: newStatus } : e);
+    renderPipeline();
+    toast('Status updated');
+  }
+
+  // ── Quotes ───────────────────────────────────────────────
+  async function loadQuotes() {
+    const { data } = await sb.from('quotes')
+      .select('*, quote_lines(*)')
+      .eq('enquiry_id', currentEnquiry.id)
+      .order('version', { ascending: false });
+    currentQuotes = data || [];
+    renderQuotes();
+  }
+
+  function renderQuotes() {
+    const el = document.getElementById('quotes-panel');
+    if (!currentQuotes.length) {
+      el.innerHTML = '<div class="empty-state">No quotes yet — click + Quote to create one</div>';
+      return;
+    }
+
+    el.innerHTML = currentQuotes.map(q => {
+      const lines = q.quote_lines || [];
+      const total = lines.reduce((s, l) => s + (l.line_total || 0), 0);
+      return `
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <div>
+              <span style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px">Quote v${q.version}</span>
+              <span class="status-pip s-${q.status}" style="margin-left:10px">${esc(q.status)}</span>
+              ${q.is_current ? '<span style="font-size:10px;color:var(--green);margin-left:8px;font-weight:600">CURRENT</span>' : ''}
+            </div>
+            <div style="font-family:\'DM Mono\',monospace;font-size:18px;color:var(--accent)">
+              £${fmt(total)}
+            </div>
+          </div>
+          ${lines.length ? `
+          <table class="quote-table" style="margin-bottom:0">
+            <thead><tr>
+              <th>Description</th><th>Plot Ref</th>
+              <th style="text-align:right">Qty</th>
+              <th style="text-align:right">Unit Price</th>
+              <th style="text-align:right">Total</th>
+            </tr></thead>
+            <tbody>
+              ${lines.map(l => `
+                <tr>
+                  <td>${esc(l.description)}<br><span style="font-size:10px;color:var(--muted)">${esc(l.specification||'')}</span></td>
+                  <td style="color:var(--muted2)">${esc(l.plot_reference||'—')}</td>
+                  <td class="right mono">${l.quantity} ${l.unit}</td>
+                  <td class="right mono">£${fmt(l.unit_price)}</td>
+                  <td class="right mono" style="color:var(--accent)">£${fmt(l.line_total)}</td>
+                </tr>`).join('')}
+            </tbody>
+          </table>` : '<div style="font-size:12px;color:var(--muted)">No line items</div>'}
+          <div style="display:flex;gap:8px;margin-top:12px">
+            ${q.status==='Draft'&&canWrite ? `<button class="btn-action success" onclick="markQuoteSent('${q.id}')">✉ Mark Sent</button>` : ''}
+            ${q.status==='Sent'&&canWrite ? `<button class="btn-action success" onclick="markQuoteApproved('${q.id}')">✓ Mark Approved</button>` : ''}
+            ${q.status==='Sent'&&canWrite ? `<button class="btn-action danger" onclick="markQuoteDeclined('${q.id}')">✗ Mark Declined</button>` : ''}
+          </div>
+          ${q.notes ? `<div style="font-size:12px;color:var(--muted2);margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">${esc(q.notes)}</div>` : ''}
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ── New/Edit Enquiry ─────────────────────────────────────
+  function openNewEnquiry() {
+    if (!canWrite) return;
+    editingEnquiryId = null;
+    document.getElementById('enquiry-modal-title').textContent = 'New Enquiry';
+    document.getElementById('eq-developer').value = '';
+    document.getElementById('eq-status').value = 'New';
+    document.getElementById('eq-site').value = '';
+    document.getElementById('eq-plots').value = '';
+    document.getElementById('eq-contact-name').value = '';
+    document.getElementById('eq-contact-email').value = '';
+    document.getElementById('eq-contact-phone').value = '';
+    document.getElementById('eq-source').value = '';
+    document.getElementById('eq-date').value = today();
+    document.getElementById('eq-deadline').value = '';
+    document.getElementById('eq-plot-types').value = '';
+    document.getElementById('eq-location').value = '';
+    document.getElementById('eq-notes').value = '';
+    document.getElementById('modal-enquiry').classList.add('open');
+  }
+
+  function openEditEnquiry() {
+    if (!currentEnquiry || !canWrite) return;
+    editingEnquiryId = currentEnquiry.id;
+    document.getElementById('enquiry-modal-title').textContent = 'Edit Enquiry';
+    const e = currentEnquiry;
+    document.getElementById('eq-developer').value = e.developer_id || '';
+    document.getElementById('eq-status').value = e.status;
+    document.getElementById('eq-site').value = e.site_name || '';
+    document.getElementById('eq-plots').value = e.plot_count || '';
+    document.getElementById('eq-contact-name').value = e.contact_name || '';
+    document.getElementById('eq-contact-email').value = e.contact_email || '';
+    document.getElementById('eq-contact-phone').value = e.contact_phone || '';
+    document.getElementById('eq-source').value = e.source || '';
+    document.getElementById('eq-date').value = e.enquiry_date || today();
+    document.getElementById('eq-deadline').value = e.quote_required_by || '';
+    document.getElementById('eq-plot-types').value = e.plot_types || '';
+    document.getElementById('eq-location').value = e.location || '';
+    document.getElementById('eq-notes').value = e.notes || '';
+    document.getElementById('modal-enquiry').classList.add('open');
+  }
+
+  async function saveEnquiry() {
+    const devId = document.getElementById('eq-developer').value;
+    const siteName = document.getElementById('eq-site').value.trim();
+    if (!devId || !siteName) { toast('Developer and site name are required', true); return; }
+
+    const payload = {
+      developer_id:      devId,
+      status:            document.getElementById('eq-status').value,
+      site_name:         siteName,
+      plot_count:        parseInt(document.getElementById('eq-plots').value) || null,
+      contact_name:      document.getElementById('eq-contact-name').value.trim(),
+      contact_email:     document.getElementById('eq-contact-email').value.trim(),
+      contact_phone:     document.getElementById('eq-contact-phone').value.trim(),
+      source:            document.getElementById('eq-source').value,
+      enquiry_date:      document.getElementById('eq-date').value || today(),
+      quote_required_by: document.getElementById('eq-deadline').value || null,
+      plot_types:        document.getElementById('eq-plot-types').value.trim(),
+      location:          document.getElementById('eq-location').value.trim(),
+      notes:             document.getElementById('eq-notes').value.trim(),
+      assigned_to:       currentUser.email,
+      updated_at:        new Date().toISOString(),
+    };
+
+    if (editingEnquiryId) {
+      const { error } = await sb.from('enquiries').update(payload).eq('id', editingEnquiryId);
+      if (error) { toast('Error saving', true); return; }
+      await logWorkflow('enquiry', editingEnquiryId, 'Enquiry updated', '', '');
+      toast('Enquiry updated');
+    } else {
+      payload.created_by = currentUser.email;
+      const { data, error } = await sb.from('enquiries').insert(payload).select().single();
+      if (error) { toast('Error saving', true); return; }
+      await logWorkflow('enquiry', data.id, 'Enquiry created', '', payload.status);
+      toast('Enquiry created');
+    }
+
+    closeModals();
+    await loadEnquiries();
+    if (editingEnquiryId) {
+      await selectEnquiry(editingEnquiryId);
+    }
+  }
+
+  // ── New Quote ────────────────────────────────────────────
+  function openNewQuote() {
+    if (!currentEnquiry || !canWrite) return;
+    quoteLines = [];
+    document.getElementById('qt-valid').value = '';
+    document.getElementById('qt-discount').value = '0';
+    document.getElementById('qt-notes').value = '';
+    renderQuoteLinesEditor();
+    document.getElementById('modal-quote').classList.add('open');
+  }
+
+  function addQuoteLine() {
+    quoteLines.push({ description:'', specification:'', product_type:'', plot_reference:'', quantity:1, unit:'unit', unit_cost:0, unit_price:0, line_total:0 });
+    renderQuoteLinesEditor();
+  }
+
+  function removeQuoteLine(idx) {
+    quoteLines.splice(idx, 1);
+    renderQuoteLinesEditor();
+  }
+
+  function renderQuoteLinesEditor() {
+    const el = document.getElementById('quote-lines-editor');
+    if (!quoteLines.length) {
+      el.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:8px 0">No lines yet — click + Add Line</div>';
+      updateTotalPreview();
+      return;
+    }
+    el.innerHTML = quoteLines.map((l, i) => `
+      <div style="background:var(--surface3);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <input class="form-input" placeholder="Description *" value="${esc(l.description)}"
+            oninput="quoteLines[${i}].description=this.value"/>
+          <select class="form-select" onchange="quoteLines[${i}].product_type=this.value">
+            <option value="">— Product type —</option>
+            ${PRODUCTS.map(p=>`<option ${l.product_type===p?'selected':''}>${p}</option>`).join('')}
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 80px 100px 100px auto;gap:8px;align-items:center">
+          <input class="form-input" placeholder="Plot ref e.g. All / Plot 1" value="${esc(l.plot_reference)}"
+            oninput="quoteLines[${i}].plot_reference=this.value"/>
+          <input class="form-input" placeholder="Spec / size" value="${esc(l.specification)}"
+            oninput="quoteLines[${i}].specification=this.value"/>
+          <input class="form-input" type="number" min="1" placeholder="Qty" value="${l.quantity}"
+            oninput="quoteLines[${i}].quantity=parseFloat(this.value)||1;calcLine(${i})"/>
+          <input class="form-input" type="number" min="0" step="0.01" placeholder="Cost £" value="${l.unit_cost||''}"
+            oninput="quoteLines[${i}].unit_cost=parseFloat(this.value)||0;calcLine(${i})"/>
+          <input class="form-input" type="number" min="0" step="0.01" placeholder="Price £" value="${l.unit_price||''}"
+            oninput="quoteLines[${i}].unit_price=parseFloat(this.value)||0;calcLine(${i})"/>
+          <button onclick="removeQuoteLine(${i})" style="background:transparent;border:none;color:var(--red);cursor:pointer;font-size:16px;padding:4px">✕</button>
+        </div>
+        <div style="text-align:right;font-size:12px;color:var(--muted2);margin-top:6px">
+          Line total: <span style="color:var(--accent);font-family:'DM Mono',monospace">£${fmt(l.line_total)}</span>
+        </div>
+      </div>
+    `).join('');
+    updateTotalPreview();
+  }
+
+  function calcLine(idx) {
+    const l = quoteLines[idx];
+    l.line_total = (l.unit_price || 0) * (l.quantity || 1);
+    updateTotalPreview();
+  }
+
+  function updateTotalPreview() {
+    const total = quoteLines.reduce((s, l) => s + (l.line_total || 0), 0);
+    document.getElementById('qt-total-preview').textContent = '£' + fmt(total);
+  }
+
+  async function saveQuote() {
+    if (!currentEnquiry) return;
+    const validLines = quoteLines.filter(l => l.description.trim());
+    const subtotal = validLines.reduce((s, l) => s + l.line_total, 0);
+    const discPct = parseFloat(document.getElementById('qt-discount').value) || 0;
+    const discAmt = subtotal * discPct / 100;
+    const total = subtotal - discAmt;
+
+    // Version number
+    const nextVersion = currentQuotes.length ? Math.max(...currentQuotes.map(q => q.version)) + 1 : 1;
+
+    // Mark previous quotes as not current
+    if (currentQuotes.length) {
+      await sb.from('quotes').update({ is_current: false }).eq('enquiry_id', currentEnquiry.id);
+    }
+
+    const { data: quote, error } = await sb.from('quotes').insert({
+      enquiry_id:      currentEnquiry.id,
+      version:         nextVersion,
+      is_current:      true,
+      status:          'Draft',
+      created_date:    today(),
+      valid_until:     document.getElementById('qt-valid').value || null,
+      subtotal,
+      discount_pct:    discPct,
+      discount_amount: discAmt,
+      total,
+      notes:           document.getElementById('qt-notes').value.trim(),
+      created_by:      currentUser.email,
+    }).select().single();
+
+    if (error) { toast('Error creating quote', true); return; }
+
+    // Insert line items
+    if (validLines.length) {
+      const lineRows = validLines.map((l, i) => ({
+        quote_id:       quote.id,
+        line_order:     i,
+        description:    l.description,
+        product_type:   l.product_type,
+        specification:  l.specification,
+        plot_reference: l.plot_reference,
+        quantity:       l.quantity,
+        unit:           l.unit || 'unit',
+        unit_cost:      l.unit_cost,
+        unit_price:     l.unit_price,
+        line_total:     l.line_total,
+      }));
+      await sb.from('quote_lines').insert(lineRows);
+    }
+
+    await logWorkflow('quote', quote.id, `Quote v${nextVersion} created — £${fmt(total)}`, '', 'Draft');
+
+    // Update enquiry status to Quoting if it was New
+    if (currentEnquiry.status === 'New') {
+      await sb.from('enquiries').update({ status: 'Quoting', updated_at: new Date().toISOString() }).eq('id', currentEnquiry.id);
+      currentEnquiry.status = 'Quoting';
+    }
+
+    closeModals();
+    toast(`Quote v${nextVersion} created — £${fmt(total)}`);
+    await loadEnquiries();
+    await loadQuotes();
+    showTab('quotes');
+  }
+
+  async function markQuoteSent(quoteId) {
+    await sb.from('quotes').update({ status: 'Sent', sent_date: today() }).eq('id', quoteId);
+    await sb.from('enquiries').update({ status: 'Quoted', updated_at: new Date().toISOString() }).eq('id', currentEnquiry.id);
+    await logWorkflow('quote', quoteId, 'Quote marked as Sent', 'Draft', 'Sent');
+    toast('Quote marked as sent'); await loadEnquiries(); await loadQuotes();
+  }
+
+  async function markQuoteApproved(quoteId) {
+    await sb.from('quotes').update({ status: 'Approved', response_date: today(), approved_by: currentUser.email, approved_at: new Date().toISOString() }).eq('id', quoteId);
+    await sb.from('enquiries').update({ status: 'Won', updated_at: new Date().toISOString() }).eq('id', currentEnquiry.id);
+    await logWorkflow('quote', quoteId, 'Quote APPROVED — enquiry Won', 'Sent', 'Approved');
+    toast('Quote approved — enquiry marked Won! 🎉'); await loadEnquiries(); await loadQuotes();
+  }
+
+  async function markQuoteDeclined(quoteId) {
+    await sb.from('quotes').update({ status: 'Declined', response_date: today() }).eq('id', quoteId);
+    await sb.from('enquiries').update({ status: 'Lost', updated_at: new Date().toISOString() }).eq('id', currentEnquiry.id);
+    await logWorkflow('quote', quoteId, 'Quote declined — enquiry Lost', 'Sent', 'Declined');
+    toast('Quote marked as declined'); await loadEnquiries(); await loadQuotes();
+  }
+
+  // ── Tabs ─────────────────────────────────────────────────
+  function showTab(name) {
+    document.querySelectorAll('.tab').forEach((t, i) => {
+      const names = ['overview','quotes','notes'];
+      t.classList.toggle('active', names[i] === name);
+    });
+    document.querySelectorAll('.tab-panel').forEach(p => {
+      p.classList.toggle('active', p.id === 'tab-' + name);
+    });
+  }
+
+  // ── Audit ────────────────────────────────────────────────
+  async function logWorkflow(type, id, action, oldVal, newVal) {
+    await sb.from('workflow_audit').insert({
+      record_type: type, record_id: id,
+      action, old_value: oldVal, new_value: newVal,
+      user_email: currentUser.email,
+    }).catch(() => {});
+  }
+
+  // ── Helpers ──────────────────────────────────────────────
+  function closeModals() {
+    document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open'));
+  }
+
+  function today() {
+    return new Date().toISOString().split('T')[0];
+  }
+
+  function formatDate(d) {
+    if (!d) return '—';
+    return new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
+  function fmt(n) {
+    return (parseFloat(n) || 0).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function esc(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function toast(msg, isError = false) {
+    const t = document.getElementById('toast');
+    t.textContent = (isError ? '⚠ ' : '✓ ') + msg;
+    t.style.borderColor = isError ? 'var(--red)' : 'var(--green)';
+    t.style.color = isError ? 'var(--red)' : 'var(--green)';
+    t.classList.add('show'); clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  init();
+</script>
+</body>
+</html>
